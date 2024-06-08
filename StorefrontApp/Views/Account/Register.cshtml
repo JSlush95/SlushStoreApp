@@ -1,0 +1,67 @@
+﻿@model StorefrontApp.Models.RegisterViewModel
+@{
+    ViewBag.Title = "Register";
+}
+<head>
+    <link rel="stylesheet" type="text/css" href="~/css/global_styles.css" />
+</head>
+
+<main aria-labelledby="title">
+    <h2 id="title">@ViewBag.Title</h2>
+
+    @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { role = "form" }))
+    {
+        @Html.AntiForgeryToken()
+        <hr />
+        @Html.ValidationSummary("", new { @class = "text-danger" })
+        <div class="row">
+            @Html.LabelFor(m => m.Username, new { @class = "col-md-2 col-form-label" })
+            <div class="col-md-10">
+                @Html.TextBoxFor(m => m.Username, new { @class = "form-control" })
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            @Html.LabelFor(m => m.Email, new { @class = "col-md-2 col-form-label" })
+            <div class="col-md-10">
+                @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            @Html.LabelFor(m => m.Password, new { @class = "col-md-2 col-form-label" })
+            <div class="col-md-10">
+                @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            @Html.LabelFor(m => m.ConfirmPassword, new { @class = "col-md-2 col-form-label" })
+            <div class="col-md-10">
+                @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control" })
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="offset-md-2 col-md-10">
+                <input type="submit" value="Register" class="btn btn-light" />
+            </div>
+        </div>
+        <br />
+        <div class="entry-content">
+            <strong>Rules:</strong>
+            <ul>
+                <li>Email must be in a valid form.</li>
+                <li>Username and password must be alphanumeric. </li>
+                <li>Username and password must be at least a length of 6.</li>
+                <li>Passwords must contain at least one non-letter or digit character.</li>
+                <li>Passwords must contain at least one digit ('0'-'9').</li>
+                <li>Passwords must contain at least one uppercase ('A'-'Z').</li>
+            </ul>
+        </div>
+    }
+</main>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}
