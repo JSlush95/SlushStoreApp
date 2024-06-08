@@ -12,17 +12,17 @@
     <div>
         <h2>General Account Settings:</h2>
         <hr />
-        <h5>Change Credentials:</h5>
+        <h5><u>Change Credentials</u></h5>
         <div class="list-group">
-            @Html.ActionLink("Change Username", "ChangeUsername", "Manage", null, new { @class = "list-group-item list-group-item-primary", aria_current = "true" })
-            @Html.ActionLink("Change Email", "ChangeEmail", "Manage", null, new { @class = "list-group-item list-group-item-primary", aria_current = "true" })
+            @Html.ActionLink("Change Username", "ChangeUsername", "Manage", null, new { @class = "list-group-item list-group-item-action", aria_current = "true" })
+            @Html.ActionLink("Change Email", "ChangeEmail", "Manage", null, new { @class = "list-group-item list-group-item-action", aria_current = "true" })
             @if (Model.HasPassword)
             {
-                @Html.ActionLink("Change Password", "ChangePassword", "Manage", null, new { @class = "list-group-item list-group-item-primary", aria_current = "true" })
+                @Html.ActionLink("Change Password", "ChangePassword", "Manage", null, new { @class = "list-group-item list-group-item-action", aria_current = "true" })
             }
             else
             {
-                @Html.ActionLink("Create", "SetPassword", "Manage", null, new { @class = "list-group-item list-group-item-primary", aria_current = "true" })
+                @Html.ActionLink("Create", "SetPassword", "Manage", null, new { @class = "list-group-item list-group-item-action", aria_current = "true" })
             }
         </div>
         <br /><br />
@@ -37,7 +37,7 @@
             </div>
         </div>
         <br /><br />
-        <dt>Two-Factor Authentication:</dt>
+        <dt><u>Two-Factor Authentication</u></dt>
         <dd>
             @*<p>
             There are no two-factor authentication providers configured. See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>

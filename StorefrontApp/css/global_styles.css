@@ -5,6 +5,19 @@
     width: 20%;
 }
 
+.list-group-item-action {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.list-group-item-action:hover {
+    color: #0056b3;
+}
+
+.list-group-item-action:focus, .list-group-item-action:active {
+    color: #0056b3;
+}
+
 .card {
     width: 40%;
 }
