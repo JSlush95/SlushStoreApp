@@ -1,2 +1,10 @@
 ﻿body {
 }
+
+.list-group {
+    width: 20%;
+}
+
+.card {
+    width: 40%;
+}

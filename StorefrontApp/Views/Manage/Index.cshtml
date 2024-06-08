@@ -10,103 +10,96 @@
 
     <p class="text-success">@ViewBag.StatusMessage</p>
     <div>
-        <h3>General Account Settings</h3>
+        <h2>General Account Settings:</h2>
         <hr />
-        <dl class="dl-horizontal">
-            <dt>Username:</dt>
-            <dd>
-                @Html.ActionLink("Change Username", "ChangeUsername")
-            </dd>
-            <dt>Email:</dt>
-            <dd>
-                @Html.ActionLink("Change Email", "ChangeEmail")
-            </dd>
-            <dt>Password:</dt>
-            <dd>
-                @if (Model.HasPassword)
+        <h5>Change Credentials:</h5>
+        <div class="list-group">
+            @Html.ActionLink("Change Username", "ChangeUsername", "Manage", null, new { @class = "list-group-item list-group-item-primary", aria_current = "true" })
+            @Html.ActionLink("Change Email", "ChangeEmail", "Manage", null, new { @class = "list-group-item list-group-item-primary", aria_current = "true" })
+            @if (Model.HasPassword)
+            {
+                @Html.ActionLink("Change Password", "ChangePassword", "Manage", null, new { @class = "list-group-item list-group-item-primary", aria_current = "true" })
+            }
+            else
+            {
+                @Html.ActionLink("Create", "SetPassword", "Manage", null, new { @class = "list-group-item list-group-item-primary", aria_current = "true" })
+            }
+        </div>
+        <br /><br />
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title"><u>Unconfirmed Account</u></h5>
+                <ul>
+                    <li class="card-text">If the email provided does not work, change it above.</li>
+                    @*<li class="card-text">Unconfirmed accounts can not use the storefront system.</li>*@
+                </ul>
+                @Html.ActionLink("Resend Confirmation Email", "ResendConfirmationEmail", "Account", null, new { @class = "btn btn-outline-primary"})
+            </div>
+        </div>
+        <br /><br />
+        <dt>Two-Factor Authentication:</dt>
+        <dd>
+            @*<p>
+            There are no two-factor authentication providers configured. See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
+            for details on setting up this ASP.NET application to support two-factor authentication.
+            </p>*@
+            @if (Model.TwoFactor)
+            {
+                using (Html.BeginForm("DisableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
                 {
-                    @Html.ActionLink("Change Password", "ChangePassword")
+                    @Html.AntiForgeryToken()
+                    <text><mark>Enabled</mark>
+                        <input type="submit" value="Disable" class="btn btn-link" id="two-FA-link" />
+                    </text>
                 }
-                else
+            }
+            else
+            {
+                using (Html.BeginForm("EnableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
                 {
-                    @Html.ActionLink("Create", "SetPassword")
+                    @Html.AntiForgeryToken()
+                    <text><mark>Disabled</mark>
+                        <input type="submit" value="Enable" class="btn btn-link" id="two-FA-link" />
+                    </text>
                 }
-                @if (!Model.EmailConfirmed)
-                {
-                    <br /><br />
-                    <strong>Unconfirmed Account:</strong>
-                    <ul>
-                        <li>Cannot use the banking system until your account is confirmed.</li>
-                        <li>If the email provided does not work, change it above.</li>
-                        <li>@Html.ActionLink("Resend Confirmation Email", "ResendConfirmationEmail", "Account")</li>
-                    </ul>
+            }
+        </dd>
+        <br />
+        @*<dt>External Logins:</dt>
+        <dd>
+            @Model.Logins.Count [
+            @Html.ActionLink("Manage", "ManageLogins") ]
+        </dd>*@
+        @*
+        Phone Numbers can used as a second factor of verification in a two-factor authentication system.
 
-                }
-            </dd>
-            @*<dt>External Logins:</dt>
-                <dd>
-                    @Model.Logins.Count [
-                    @Html.ActionLink("Manage", "ManageLogins") ]
-                </dd>*@
-            @*
-                Phone Numbers can used as a second factor of verification in a two-factor authentication system.
+        See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
+            for details on setting up this ASP.NET application to support two-factor authentication using SMS.
 
-                See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                    for details on setting up this ASP.NET application to support two-factor authentication using SMS.
-
-                Uncomment the following block after you have set up two-factor authentication
-            *@
-            @*
-                <dt>Phone Number:</dt>
-                <dd>
-                    @(Model.PhoneNumber ?? "None")
-                    @if (Model.PhoneNumber != null)
-                    {
-                        <br />
-                        <text>[&nbsp;&nbsp;@Html.ActionLink("Change", "AddPhoneNumber")&nbsp;&nbsp;]</text>
-                        using (Html.BeginForm("RemovePhoneNumber", "Manage", FormMethod.Post, new { role = "form" }))
-                        {
-                            @Html.AntiForgeryToken()
-                            <text>[<input type="submit" value="Remove" class="btn-link" />]</text>
-                        }
-                    }
-                    else
-                    {
-                        <text>[&nbsp;&nbsp;@Html.ActionLink("Add", "AddPhoneNumber")
-                    }
-                </dd>
-            *@
-            <br />
-            <dt>Two-Factor Authentication:</dt>
-            <dd>
-                @*<p>
-                    There are no two-factor authentication providers configured. See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                    for details on setting up this ASP.NET application to support two-factor authentication.
-                    </p>*@
-                @if (Model.TwoFactor)
+        Uncomment the following block after you have set up two-factor authentication
+        *@
+        @*
+        <dt>Phone Number:</dt>
+        <dd>
+            @(Model.PhoneNumber ?? "None")
+            @if (Model.PhoneNumber != null)
+            {
+                <br />
+                <text>[&nbsp;&nbsp;@Html.ActionLink("Change", "AddPhoneNumber")&nbsp;&nbsp;]</text>
+                using (Html.BeginForm("RemovePhoneNumber", "Manage", FormMethod.Post, new { role = "form" }))
                 {
-                    using (Html.BeginForm("DisableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-                    {
-                        @Html.AntiForgeryToken()
-                        <text><mark>Enabled</mark>
-                            <input type="submit" value="Disable" class="btn btn-link" id="two-FA-link" />
-                        </text>
-                    }
+                    @Html.AntiForgeryToken()
+                    <text>[<input type="submit" value="Remove" class="btn-link" />]</text>
                 }
-                else
-                {
-                    using (Html.BeginForm("EnableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-                    {
-                        @Html.AntiForgeryToken()
-                        <text><mark>Disabled</mark>
-                            <input type="submit" value="Enable" class="btn btn-link" id="two-FA-link" />
-                        </text>
-                    }
-                }
-            </dd>
-            <br />
-        </dl>
+            }
+            else
+            {
+                <text>[&nbsp;&nbsp;@Html.ActionLink("Add", "AddPhoneNumber")
+            }
+        </dd>
+        *@
     </div>
     <br />
-    <h3>Customer Account Settings:</h3>
+    <h2>Customer Account Settings:</h2>
+    <p>Yepclock.</p>
 </main>
