@@ -14,15 +14,15 @@
         <hr />
         <h5><u>Change Credentials</u></h5>
         <div class="list-group">
-            @Html.ActionLink("Change Username", "ChangeUsername", "Manage", null, new { @class = "list-group-item list-group-item-action", aria_current = "true" })
-            @Html.ActionLink("Change Email", "ChangeEmail", "Manage", null, new { @class = "list-group-item list-group-item-action", aria_current = "true" })
+            @Html.ActionLink("Change Username", "ChangeUsername", "Manage", null, new { @class = "list-group-item list-group-item-action" })
+            @Html.ActionLink("Change Email", "ChangeEmail", "Manage", null, new { @class = "list-group-item list-group-item-action" })
             @if (Model.HasPassword)
             {
-                @Html.ActionLink("Change Password", "ChangePassword", "Manage", null, new { @class = "list-group-item list-group-item-action", aria_current = "true" })
+                @Html.ActionLink("Change Password", "ChangePassword", "Manage", null, new { @class = "list-group-item list-group-item-action" })
             }
             else
             {
-                @Html.ActionLink("Create", "SetPassword", "Manage", null, new { @class = "list-group-item list-group-item-action", aria_current = "true" })
+                @Html.ActionLink("Create", "SetPassword", "Manage", null, new { @class = "list-group-item list-group-item-action" })
             }
         </div>
         <br /><br />
