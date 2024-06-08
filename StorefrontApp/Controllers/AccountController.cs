@@ -176,9 +176,9 @@ namespace StorefrontApp.Controllers
 
                     // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
                     // Send an email with this link
-                    // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
-                    // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
-                    // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
+                    string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
+                    var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+                    await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
 
                     return RedirectToAction("EmailConfirmationSent", "Account");
                 }
@@ -200,6 +200,29 @@ namespace StorefrontApp.Controllers
             }
             var result = await UserManager.ConfirmEmailAsync(userId, code);
             return View(result.Succeeded ? "ConfirmEmail" : "Error");
+        }
+
+        // GET: /Account/EmailConfirmationSent
+        [AllowAnonymous]
+        public ActionResult EmailConfirmationSent()
+        {
+            return View();
+        }
+
+        public async Task<ActionResult> ResendConfirmationEmail()
+        {
+            var user = await UserManager.FindByNameAsync(User.Identity.GetUserName());
+            if (user != null)
+            {
+                string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
+                var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
+                string emailBody = $"Thank you for signing up for my fake storefront website!<br/>Please confirm your account by clicking <a href=\"{callbackUrl}\">here</a>";
+                await UserManager.SendEmailAsync(user.Id, "Account Confirmation", emailBody);
+
+                return RedirectToAction("EmailConfirmationSent", "Account");
+            }
+
+            return View("Error");
         }
 
         //

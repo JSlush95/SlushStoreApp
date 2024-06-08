@@ -50,7 +50,6 @@ namespace StorefrontApp.Models
     {
         [Required]
         [Display(Name = "Username")]
-        [EmailAddress]
         public string Username { get; set; }
 
         [Required]
@@ -65,7 +64,7 @@ namespace StorefrontApp.Models
     public class RegisterViewModel
     {
         [Required]
-        [EmailAddress]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
         [Display(Name = "Username")]
         public string Username { get; set; }
 
