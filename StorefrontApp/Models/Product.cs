@@ -19,6 +19,8 @@ namespace StorefrontApp.Models
         [Required]
         public string ProductDescription { get; set; }
         [Required]
+        public int Price { get; set; }
+        [Required]
         public int ProductType { get; set; }
         [Required]
         public int Stock {  get; set; }
