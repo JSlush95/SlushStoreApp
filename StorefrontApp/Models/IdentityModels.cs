@@ -9,11 +9,11 @@ namespace StorefrontApp.Models
 {
     public class ApplicationDbContext : IdentityDbContext<User, CustomRole, int, CustomUserLogin, CustomUserRole, CustomUserClaim>
     {
-        public DbSet<Order> Orders {  get; set; }
+        public DbSet<OrderItem> Orders {  get; set; }
         public DbSet<PaymentMethod> PaymentMethods { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<Sales> Sales { get; set; }
+        public DbSet<Order> Sales { get; set; }
         public DbSet<ShippingAddress> ShippingAddresses { get; set; }
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
         public DbSet<StoreAccount> StoreAccounts { get; set; }
@@ -39,7 +39,6 @@ namespace StorefrontApp.Models
             modelBuilder.Entity<CustomUserLogin>().ToTable("UserLogins");
 
             // Using Fluent API method for applying the composite key relation for Reviews.
-            // Composite key configuration for Review
             modelBuilder.Entity<Review>()
                 .HasKey(r => new { r.AccountID, r.ProductID });
 
@@ -56,56 +55,61 @@ namespace StorefrontApp.Models
                 .WillCascadeOnDelete(false);
 
             /*
-             * Implementing the following due to multiple/cascading paths. This would be problematic for Entity Framework otherwise.
+             * Implementing the following due to multiple/cascading paths from multi-relational links. This would be problematic for Entity Framework otherwise.
              */
-            // Disabling cascade delete for Sales -> PaymentMethod.
-            modelBuilder.Entity<Sales>()
-                .HasRequired(s => s.PaymentMethod)
+            // Behavior for Order -> StoreAccount
+            modelBuilder.Entity<Order>()
+                .HasRequired(o => o.StoreAccount)
                 .WithMany()
-                .HasForeignKey(s => s.PaymentMethodID)
+                .HasForeignKey(o => o.BuyerID)
                 .WillCascadeOnDelete(false);
-
-            // Disabling cascade delete for Sales -> StoreAccount.
-            modelBuilder.Entity<Sales>()
-                .HasRequired(s => s.StoreAccount)
+            // Behavior for Order -> PaymentMethod
+            modelBuilder.Entity<Order>()
+                .HasRequired(o => o.PaymentMethod)
                 .WithMany()
-                .HasForeignKey(s => s.BuyerID)
+                .HasForeignKey(o => o.PaymentMethodID)
                 .WillCascadeOnDelete(false);
-
-            // Disabling cascade delete for Sales -> Order.
-            modelBuilder.Entity<Sales>()
-                .HasRequired(s => s.order)
+            // Behavior for OrderItem -> Order
+            modelBuilder.Entity<OrderItem>()
+                .HasRequired(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderID)
+                .WillCascadeOnDelete(false);
+            // Behavior for OrderItem -> Product
+            modelBuilder.Entity<OrderItem>()
+                .HasRequired(oi => oi.Product)
                 .WithMany()
-                .HasForeignKey(s => s.OrderID)
+                .HasForeignKey(oi => oi.ProductID)
                 .WillCascadeOnDelete(false);
-
-            // Disabling cascade delete for ShoppingCart -> StoreAccount.
+            // Behavior for PaymentMethod -> StoreAccount
+            modelBuilder.Entity<PaymentMethod>()
+                .HasRequired(pm => pm.Account)
+                .WithMany()
+                .HasForeignKey(pm => pm.AccountID)
+                .WillCascadeOnDelete(false);
+            // Behavior for ShoppingCart -> StoreAccount
             modelBuilder.Entity<ShoppingCart>()
-                .HasRequired(s => s.Account)
+                .HasRequired(sc => sc.Account)
                 .WithMany()
-                .HasForeignKey(s => s.AccountID)
+                .HasForeignKey(sc => sc.AccountID)
                 .WillCascadeOnDelete(false);
-
-            // Disabling cascade delete for ShoppingCart -> Product.
+            // Behavior for ShoppingCart -> Product
             modelBuilder.Entity<ShoppingCart>()
-                .HasRequired(s => s.Product)
+                .HasRequired(sc => sc.Product)
                 .WithMany()
-                .HasForeignKey(s => s.ProductID)
+                .HasForeignKey(sc => sc.ProductID)
                 .WillCascadeOnDelete(false);
-
-            // Disabling cascade delete for Wishlist -> StoreAccount.
+            // Behavior for Wishlist -> Product
             modelBuilder.Entity<Wishlist>()
-                .HasRequired(w => w.Account)
+                .HasRequired(wl => wl.Product)
                 .WithMany()
-                .HasForeignKey(w => w.AccountID)
-                .WillCascadeOnDelete(false);
-
-            // Disabling cascade delete for Wishlist -> Product.
+                .HasForeignKey(wl => wl.ProductID)
+                .WillCascadeOnDelete (false);
+            // Behavior for Wishlist -> StoreAccount
             modelBuilder.Entity<Wishlist>()
-                .HasRequired(w => w.Product)
+                .HasRequired(wl => wl.Account)
                 .WithMany()
-                .HasForeignKey(w => w.ProductID)
-                .WillCascadeOnDelete(false);
+                .HasForeignKey(wl => wl.AccountID);
         }
 
         public static ApplicationDbContext Create()

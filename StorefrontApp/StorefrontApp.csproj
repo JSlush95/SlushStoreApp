@@ -177,11 +177,11 @@
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
-    <Compile Include="Models\Order.cs" />
+    <Compile Include="Models\OrderItem.cs" />
     <Compile Include="Models\PaymentMethod.cs" />
     <Compile Include="Models\Product.cs" />
     <Compile Include="Models\Review.cs" />
-    <Compile Include="Models\Sales.cs" />
+    <Compile Include="Models\Order.cs" />
     <Compile Include="Models\ShippingAddress.cs" />
     <Compile Include="Models\ShoppingCart.cs" />
     <Compile Include="Models\StoreAccount.cs" />

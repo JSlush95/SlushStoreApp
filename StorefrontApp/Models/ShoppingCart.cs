@@ -7,6 +7,7 @@ using System.Web;
 
 namespace StorefrontApp.Models
 {
+    [Table("ShoppingCarts")]
     public class ShoppingCart
     {
         [Key]

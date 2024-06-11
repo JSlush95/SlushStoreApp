@@ -7,19 +7,22 @@ using System.Web;
 
 namespace StorefrontApp.Models
 {
-    [Table("Wishlists")]
-    public class Wishlist
+    [Table("OrderItems")]
+    public class OrderItem
     {
         [Key]
-        public int WishListID { get; set; }
+        public int OrderItemID { get; set; }
         [Required]
-        public int AccountID { get; set; }
+        public int OrderID { get; set; }
         [Required]
         public int ProductID { get; set; }
         [Required]
         public int Quantity { get; set; }
-        [ForeignKey("AccountID")]
-        public virtual StoreAccount Account { get; set; }
+        [Required]
+        public float Price { get; set; }
+
+        [ForeignKey("OrderID")]
+        public virtual Order Order { get; set; }
         [ForeignKey("ProductID")]
         public virtual Product Product { get; set; }
     }

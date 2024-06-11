@@ -7,6 +7,7 @@ using System.Web;
 
 namespace StorefrontApp.Models
 {
+    [Table("PaymentMethods")]
     public class PaymentMethod
     {
         [Key]

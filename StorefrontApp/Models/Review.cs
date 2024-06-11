@@ -7,6 +7,7 @@ using System.Web;
 
 namespace StorefrontApp.Models
 {
+    [Table("Reviews")]
     public class Review
     {
         // No longer the key, as the composite key definition handles integrity.

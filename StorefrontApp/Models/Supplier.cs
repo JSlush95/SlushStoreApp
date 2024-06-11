@@ -7,6 +7,7 @@ using System.Web;
 
 namespace StorefrontApp.Models
 {
+    [Table("Suppliers")]
     public class Supplier
     {
         [Key]
