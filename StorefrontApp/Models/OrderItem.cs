@@ -18,8 +18,6 @@ namespace StorefrontApp.Models
         public int ProductID { get; set; }
         [Required]
         public int Quantity { get; set; }
-        [Required]
-        public float Price { get; set; }
 
         [ForeignKey("OrderID")]
         public virtual Order Order { get; set; }
