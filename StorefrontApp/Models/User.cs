@@ -20,6 +20,8 @@ namespace BankingApp.Models
         public string FirstName { get; set; }
         [MaxLength(256)]
         public string LastName { get; set; }
+        [MaxLength(256)]
+        public string CompanyName { get; set; }
         [Required]
         public DateTime JoinDate { get; set; }
 

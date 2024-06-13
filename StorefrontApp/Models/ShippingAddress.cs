@@ -16,6 +16,7 @@ namespace StorefrontApp.Models
         public int AccountID { get; set; }
         [Required]
         public string Address { get; set; }
+
         [ForeignKey("AccountID")]
         public virtual StoreAccount Account { get; set; }
     }

@@ -11,16 +11,13 @@ namespace StorefrontApp.Models
     public class Wishlist
     {
         [Key]
-        public int WishListID { get; set; }
+        public int WishlistID { get; set; }
         [Required]
         public int AccountID { get; set; }
-        [Required]
-        public int ProductID { get; set; }
-        [Required]
-        public int Quantity { get; set; }
+
         [ForeignKey("AccountID")]
         public virtual StoreAccount Account { get; set; }
-        [ForeignKey("ProductID")]
-        public virtual Product Product { get; set; }
+
+        public virtual ICollection<WishlistItem> WishlistItems { get; set; }
     }
 }

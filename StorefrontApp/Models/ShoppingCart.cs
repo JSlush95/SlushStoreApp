@@ -14,13 +14,10 @@ namespace StorefrontApp.Models
         public int ShoppingCartID { get; set; }
         [Required]
         public int AccountID { get; set; }
-        [Required]
-        public int ProductID { get; set; }
-        [Required]
-        public int Quantity { get; set; }
+
         [ForeignKey("AccountID")]
         public virtual StoreAccount Account { get; set; }
-        [ForeignKey("ProductID")]
-        public virtual Product Product { get; set; }
+
+        public virtual ICollection<ShoppingCartItem> ShoppingCartItems { get; set; }
     }
 }

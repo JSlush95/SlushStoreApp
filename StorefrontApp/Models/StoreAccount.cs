@@ -19,9 +19,9 @@ namespace StorefrontApp.Models
         public DateTime DateOpened { get; set; }
         [Required]
         public AccountType AccountType { get; set; }
-        // Navigation field to assist in LINQ operations.
+        
         [ForeignKey("HolderID")]
-        public virtual User user { get; set; }
+        public virtual User User { get; set; }
     }
 
     public enum AccountType

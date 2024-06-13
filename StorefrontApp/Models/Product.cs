@@ -19,12 +19,12 @@ namespace StorefrontApp.Models
         [Required]
         public string ProductDescription { get; set; }
         [Required]
-        public int Price { get; set; }
+        public string ProductType { get; set; }
         [Required]
-        public int ProductType { get; set; }
-        [Required]
-        public int Stock {  get; set; }
+        public float Price { get; set; }
+        public int? Stock {  get; set; }
+        
         [ForeignKey("SupplierID")]
-        public virtual Supplier supplier { get; set; }
+        public virtual Supplier Supplier { get; set; }
     }
 }

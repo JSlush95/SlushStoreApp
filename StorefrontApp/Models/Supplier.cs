@@ -18,8 +18,7 @@ namespace StorefrontApp.Models
         public string SupplierName { get; set;}
         [Required]
         public string SupplierDescription { get; set;}
-        [Required]
-        public string ProviderName { get; set; }
+        
         [ForeignKey("AccountID")]
         public virtual StoreAccount Account { get; set; }
     }

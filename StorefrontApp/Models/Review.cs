@@ -19,8 +19,10 @@ namespace StorefrontApp.Models
         public int ProductID { get; set; }
         [Required]
         public int Rating { get; set; }
-        [Required]
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
+        [Required(AllowEmptyStrings = true)]
         public string CustomerReview {  get; set; }
+
         [ForeignKey("AccountID")]
         public virtual StoreAccount Account { get; set; }
         [ForeignKey("ProductID")]

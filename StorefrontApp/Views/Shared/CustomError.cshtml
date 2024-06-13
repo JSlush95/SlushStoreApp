@@ -1,0 +1,17 @@
+﻿
+@{
+    ViewBag.Title = "Error";
+}
+
+<!DOCTYPE html>
+<html>
+<body>
+    <div class="error-container">
+        <h2><u>An error occurred</u></h2>
+        <br />
+        <p>@ViewBag.ErrorMessage</p>
+        <br />
+        <a href="@Url.Action("Index", "Home")">Return to Home Page</a>
+    </div>
+</body>
+</html>

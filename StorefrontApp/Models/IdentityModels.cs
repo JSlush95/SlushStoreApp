@@ -93,23 +93,63 @@ namespace StorefrontApp.Models
                 .WithMany()
                 .HasForeignKey(sc => sc.AccountID)
                 .WillCascadeOnDelete(false);
-            // Behavior for ShoppingCart -> Product
-            modelBuilder.Entity<ShoppingCart>()
-                .HasRequired(sc => sc.Product)
+            // Behavior for ShoppingCartItem -> Product
+            modelBuilder.Entity<ShoppingCartItem>()
+                .HasRequired(sci => sci.Product)
                 .WithMany()
-                .HasForeignKey(sc => sc.ProductID)
-                .WillCascadeOnDelete(false);
-            // Behavior for Wishlist -> Product
-            modelBuilder.Entity<Wishlist>()
-                .HasRequired(wl => wl.Product)
-                .WithMany()
-                .HasForeignKey(wl => wl.ProductID)
+                .HasForeignKey(sci => sci.ProductID)
                 .WillCascadeOnDelete (false);
-            // Behavior for Wishlist -> StoreAccount
-            modelBuilder.Entity<Wishlist>()
+            // Behavior for ShoppingCartItem -> ShoppingCart
+            modelBuilder.Entity<ShoppingCartItem>()
+                .HasRequired(sci => sci.ShoppingCart)
+                .WithMany()
+                .HasForeignKey(sci => sci.ShoppingCartID)
+                .WillCascadeOnDelete(false);
+            // Behavior for WishlistItem -> Product
+            modelBuilder.Entity<WishlistItem>()
+                .HasRequired(wli => wli.Product)
+                .WithMany()
+                .HasForeignKey(wli => wli.ProductID)
+                .WillCascadeOnDelete(false);
+            // Behavior for WishlistItem -> Wishlist
+            modelBuilder.Entity<WishlistItem>()
+                .HasRequired(wli => wli.Wishlist)
+                .WithMany()
+                .HasForeignKey(wli => wli.WishlistID)
+                .WillCascadeOnDelete(false);
+
+            /*
+             *  Configuring the explicit relationships.
+             */
+            // One-to-one relationship with StoreAccount
+            /*modelBuilder.Entity<Wishlist>()
                 .HasRequired(wl => wl.Account)
                 .WithMany()
                 .HasForeignKey(wl => wl.AccountID);
+
+            modelBuilder.Entity<WishlistItem>()
+                .HasRequired(wi => wi.Wishlist)
+                .WithMany(wl => wl.WishlistItems)
+                .HasForeignKey(wi => wi.WishlistID);
+
+            modelBuilder.Entity<WishlistItem>()
+                .HasRequired(wi => wi.Product)
+                .WithMany()
+                .HasForeignKey(wi => wi.ProductID);
+
+            modelBuilder.Entity<ShoppingCart>()
+                .HasRequired(sc => sc.Account)
+                .WithOptional(sa => sa.ShoppingCart); // Optional one-to-one relationship, as a StoreAccount may not have a wishlist
+
+            modelBuilder.Entity<ShoppingCartItem>()
+                .HasRequired(sci => sci.ShoppingCart)
+                .WithMany(sc => sc.ShoppingCartItems)
+                .HasForeignKey(sci => sci.ShoppingCartID);
+
+            modelBuilder.Entity<ShoppingCartItem>()
+                .HasRequired(sci => sci.Product)
+                .WithMany()
+                .HasForeignKey(sci => sci.ProductID);*/
         }
 
         public static ApplicationDbContext Create()

@@ -18,13 +18,14 @@ namespace StorefrontApp.Models
         public int PaymentMethodID { get; set; }
         [Required]
         public float TotalPrice { get; set; }
-        [Required]
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
+        [Required(AllowEmptyStrings = true)]
         public string ShippingAddress { get; set; }
         [Required]
         public OrderStatus Status { get; set; }
         [Required]
         public DateTime PurchaseDate { get; set; }
-
+        
         [ForeignKey("BuyerID")]
         public virtual StoreAccount StoreAccount { get; set; }
         [ForeignKey("PaymentMethodID")]

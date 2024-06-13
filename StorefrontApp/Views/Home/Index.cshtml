@@ -1,33 +1,142 @@
-﻿﻿@{
-    ViewBag.Title = "Home Page";
+﻿@model StorefrontApp.Models.HomeViewModel
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "Store Home Page";
 }
 <head>
-    <link rel="stylesheet" type="text/css" href="~/css/global_background.css" />
+    <link rel="stylesheet" type="text/css" href="~/css/home_storepage_styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
 </head>
 
 <main>
-    <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="title">Slush Banking</h1>
-        <p class="lead">This website is a mockup (fake) website that uses my other fake banking website to simulate a storefront.. It uses C#, ASP.Net Identity with Razor HTML and Bootstrap.</p>
-    </section>
-    <br />
-    <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
-            <h2 id="gettingStartedTitle">Getting started</h2>
-            <p>
-                The sus, amogus.
-            </p>
-        </section>
+    <div class="container">
+        <div class="row">
+            @if (Model.ProductTypeOptions != null && Model.ProductTypeOptions.Any())
+            {
+                <div class="col-md-2">
+                    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <div class="row">
+                            @Html.Label("Keyword Search")
+                            @Html.Label("(Name, Type, or Supplier)")
+                            @Html.TextBoxFor(m => m.SearchInput, new { @class = "form-control" })
+                        </div>
+                        <br />
+                        <div class="row">
+                            @Html.Label("Sort Options:")
+                            @Html.EnumDropDownListFor(m => m.SortOptions, "Select Sort Option", new { @class = "form-control" })
+                        </div>
+                        <br />
+                        <div class="form-check">
+                            <label>Categories/Types:</label>
+                            <br>
+                            @foreach (var type in Model.ProductTypeOptions)
+                            {
+                                <label>@type</label>
+                                @Html.CheckBox(type, new { @class = "form-check-input" })
+                                <br />
+                            }
+                            <br />
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">Search</button>
+                    }
+                </div>
+                if (ViewBag.Message != null)
+                {
+                    <div class="alert alert-warning" role="alert">
+                        @ViewBag.Message
+                    </div>
+                }
+            }
+            <div class="col-lg">
+                <div class="container">
+                    @if (Model.Products != null && Model.Products.Any())
+                    {
+                        <div class="row">
+                            @foreach (var product in Model.Products)
+                            {
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-auto">
+                                                    <h4 class="card-title">@product.ProductName</h4>
+                                                </div>
+                                            </div>
+                                            <br />
+                                            <h5 class="card-subtitle mb-2 text-muted">Type: @product.ProductType, Price: @product.Price</h5>
+                                            <ul class="list-group">
+                                                <li class="list-group-item">Description: @product.ProductDescription</li>
+                                                <li class="list-group-item">Supplier: @product.Supplier.SupplierName</li>
+                                            </ul>
+                                            <br />
+                                            @if (Model.LoggedIn)
+                                            {
+                                                <div class="row">
+                                                    <div class="col-auto align-content-start">
+                                                        @Html.LabelFor(m => m.Quantity)
+                                                        @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @Value = "0" })
+                                                    </div>
+                                                    <div class="col-auto align-content-end">
+                                                        <div class="row">
+                                                            <div class="col-auto">
+                                                                <div class="row">
+                                                                    @using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
+                                                                    {
+                                                                        @Html.AntiForgeryToken()
+                                                                        <button type="submit" class="btn btn-outline-primary">Add to Cart</button>
+                                                                    }
+                                                                </div>
+                                                                <div class="row">
+                                                                    @using (Html.BeginForm("AddToWishlist", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
+                                                                    {
+                                                                        @Html.AntiForgeryToken()
+                                                                        <button type="submit" class="btn btn-outline-secondary">Add to Wishlist</button>
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-primary text-center top-50" role="alert">No data found.</div>
+                    }
+                </div>
+            </div>
+            @if (Model.ShoppingCart.Any() && Model.ShoppingCart != null)
+            {
+                <div class="col-md-2">
+                    @foreach (var cart in Model.ShoppingCart)
+                    {
+                        <ul class="list-group">
+                            @foreach (var item in cart.ShoppingCartItems)
+                            {
+                                <li class="list-group-item">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h4 class="card-title">@item.Product.ProductName</h4>
+                                            <h5 class="card-subtitle mb-2 text-muted">@item.Product.ProductType, Price: @item.Product.Price</h5>
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            }
+        </div>
     </div>
     <br />
-    <section class="about-section">
-        <p>I am a graduate from Arizona State University under the IRA Fulton Schools of Engineering. I decided to make a banking website to showcase the skills I have learned.</p>
-    </section>
-    <br />
-    <section class="contact-section">
-        <h2>Contact Information</h2>
-        <address>
-            <strong>Email Address:</strong> <a href="mailto:JSlush95@gmail.com">JSlush95@gmail.com</a>
-        </address>
-    </section>
+    <div>
+        @Html.PagedListPager(Model.Products, page => Url.Action("Index", new { page, searchQuery = ViewBag.CurrentFilter }))
+    </div>
 </main>
