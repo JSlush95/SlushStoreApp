@@ -86,8 +86,18 @@ namespace StorefrontApp.Controllers
                 : message == ManageMessageId.RemovePhoneSuccess ? "Your phone number was removed."
                 : "";
 
+            if (TempData.ContainsKey("Message"))
+            {
+                ViewBag.Message = TempData["Message"].ToString();
+            }
+
             var userId = GetCurrentUserId();
             var user = await UserManager.FindByIdAsync(userId);
+            var userStoreAccountCount = _dbContext.StoreAccounts
+                .Where(sa => sa.HolderID == userId).Count();
+
+            bool storeAccountCreated = userStoreAccountCount == 0 ? false : true;
+
             var model = new IndexViewModel
             {
                 HasPassword = HasPassword(),
@@ -95,9 +105,37 @@ namespace StorefrontApp.Controllers
                 TwoFactor = await UserManager.GetTwoFactorEnabledAsync(userId),
                 Logins = await UserManager.GetLoginsAsync(userId),
                 BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(User.Identity.GetUserId()),
-                EmailConfirmed = user.EmailConfirmed
+                EmailConfirmed = user.EmailConfirmed,
+                StoreAccountCreated = storeAccountCreated
             };
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CreateStoreAccount(CreateStoreAccountViewModel model)
+        {
+            var userId = GetCurrentUserId();
+            var user = await UserManager.FindByIdAsync(userId);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["Message"] = "Error with creating the store account.";
+                return RedirectToAction("Index");
+            }
+
+            var userStoreAccount = new StoreAccount
+            {
+                HolderID = userId,
+                DateOpened = DateTime.Now,
+                AccountType = model.AccountType,
+            };
+
+            _dbContext.StoreAccounts.Add(userStoreAccount);
+            var result = await _dbContext.SaveChangesAsync();
+            TempData["Message"] = "Success with creating the store account.";
+
+            return RedirectToAction("Index");
         }
 
         //

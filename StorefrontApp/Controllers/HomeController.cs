@@ -147,7 +147,7 @@ namespace StorefrontApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> AddToCart(int productID, int quantity)
         {
-            if (quantity <= 0 || !ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 TempData["Message"] = "Please choose a non-zero, non-decimal number.";
                 return RedirectToAction("Index");
@@ -205,7 +205,7 @@ namespace StorefrontApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> AddToWishlist(int productID, int quantity)
         {
-            if (quantity <= 0 || !ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
                 TempData["Message"] = "Please choose a non-zero non-decimal number.";
                 return RedirectToAction("Index");

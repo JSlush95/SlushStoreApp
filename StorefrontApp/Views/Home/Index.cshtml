@@ -74,26 +74,28 @@
                                             @if (Model.LoggedIn)
                                             {
                                                 <div class="row">
-                                                    <div class="col-auto align-content-start">
-                                                        @Html.LabelFor(m => m.Quantity)
-                                                        @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @Value = "0" })
-                                                    </div>
                                                     <div class="col-auto align-content-end">
                                                         <div class="row">
                                                             <div class="col-auto">
                                                                 <div class="row">
-                                                                    @using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
-                                                                    {
-                                                                        @Html.AntiForgeryToken()
-                                                                        <button type="submit" class="btn btn-outline-primary">Add to Cart</button>
-                                                                    }
-                                                                </div>
-                                                                <div class="row">
-                                                                    @using (Html.BeginForm("AddToWishlist", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
-                                                                    {
-                                                                        @Html.AntiForgeryToken()
-                                                                        <button type="submit" class="btn btn-outline-secondary">Add to Wishlist</button>
-                                                                    }
+                                                                    <div class="col-auto">
+                                                                        @using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
+                                                                        {
+                                                                            @Html.AntiForgeryToken()
+                                                                            @Html.LabelFor(m => m.Quantity)
+                                                                            @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @Value = "0" })
+                                                                            <button type="submit" class="btn btn-outline-primary">Add to Cart</button>
+                                                                        }
+                                                                    </div>
+                                                                    <div class="col-auto">
+                                                                        @using (Html.BeginForm("AddToWishlist", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
+                                                                        {
+                                                                            @Html.AntiForgeryToken()
+                                                                            @Html.LabelFor(m => m.Quantity)
+                                                                            @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @Value = "0" })
+                                                                            <button type="submit" class="btn btn-outline-secondary">Add to Wishlist</button>
+                                                                        }
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>

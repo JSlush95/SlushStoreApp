@@ -13,6 +13,8 @@ namespace StorefrontApp.Models
         public bool TwoFactor { get; set; }
         public bool BrowserRemembered { get; set; }
         public bool EmailConfirmed { get; set; }
+        public bool StoreAccountCreated { get; set; }
+        public CreateStoreAccountViewModel CreateStoreAccountViewModel { get; set; }
     }
 
     public class ManageLoginsViewModel
@@ -89,6 +91,13 @@ namespace StorefrontApp.Models
         [Display(Name = "Confirm new password")]
         [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
+    }
+
+    public class CreateStoreAccountViewModel
+    {
+        [Required]
+        [Display(Name = "Account Type")]
+        public AccountType AccountType { get; set; }
     }
 
     public class AddPhoneNumberViewModel

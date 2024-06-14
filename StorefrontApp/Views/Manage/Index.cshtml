@@ -101,5 +101,38 @@
     </div>
     <br />
     <h2>Customer Account Settings:</h2>
-    <p>Yepclock.</p>
+    <br />
+    <div>
+        @if (ViewBag.Message != null)
+        {
+        <div class="alert alert-warning" role="alert">
+            @ViewBag.Message
+        </div>
+        }
+        @if (Model.StoreAccountCreated)
+        {
+            <p>Created.</p>
+        }
+        else
+        {
+            <strong>Store Account Created Not Created</strong>
+            <ul>
+                <li>A store account is needed to interact with the store system.</li>
+                <li>This store account will hold a shopping cart, wishlist, and orders.</li>
+            </ul>
+            using (Html.BeginForm("CreateStoreAccount", "Manage", FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary("", new { @class = "text-danger" })
+                <div class="row">
+                    @Html.LabelFor(m => m.CreateStoreAccountViewModel.AccountType, new { @class = "col-md-2 col-form-label" })
+                    <div class="col-md-10">
+                        @Html.EnumDropDownListFor(m => m.CreateStoreAccountViewModel.AccountType, new { @class = "form-control" })
+                        <button type="submit" class="btn btn-outline-primary">Create</button>
+                    </div>
+                </div>
+                <br />
+            }
+        }
+    </div>
 </main>
