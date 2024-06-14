@@ -10,6 +10,7 @@ using PagedList;
 using Microsoft.AspNet.Identity;
 using System.Threading.Tasks;
 using System.Net;
+using System.Data.Entity.Migrations;
 
 namespace StorefrontApp.Controllers
 {
@@ -93,7 +94,9 @@ namespace StorefrontApp.Controllers
             var userId = GetCurrentUserId();
             var products = _dbContext.Products;
             var productsTypeList = GetProductTypes(products);
+            
             var shoppingCart = _dbContext.ShoppingCarts
+                .Include(sc => sc.ShoppingCartItems) // Eagerly loading for the navigation propety of the collection of ShoppingCartItems.
                 .Where(sc => sc.Account.HolderID == userId)
                 .ToHashSet();
 
@@ -137,7 +140,7 @@ namespace StorefrontApp.Controllers
                 Products = paginatedProducts,
                 ShoppingCart = shoppingCart,
                 ProductTypeOptions = productsTypeList,
-                LoggedIn = User.Identity.IsAuthenticated
+                LoggedIn = User.Identity.IsAuthenticated,
             };
 
             return View(viewModel);
@@ -156,37 +159,38 @@ namespace StorefrontApp.Controllers
             var userId = GetCurrentUserId();
             var user = await UserManager.FindByIdAsync(userId);
             var userCart = await _dbContext.ShoppingCarts
+                .Include(sc => sc.ShoppingCartItems) // Eagerly loading for the navigation propety of the collection of ShoppingCartItems.
                 .Where(sc => sc.Account.HolderID == userId)
                 .FirstOrDefaultAsync();
 
             if (userCart == null)
             {
-                var shoppingCart = new ShoppingCart
+                userCart = new ShoppingCart
                 {
                     AccountID = userId,
+                    ShoppingCartItems = new List<ShoppingCartItem>()
                 };
-                _dbContext.ShoppingCarts.Add(shoppingCart);
-
-                try
-                {
-                    await _dbContext.SaveChangesAsync();
-                    userCart = shoppingCart;    // Update reference, since the old one was empty/null.
-                }
-                catch (Exception ex)
-                {
-                    ViewBag.ErrorMessage = "Error creating a new shopping cart: " + ex.Message;
-                    return View("CustomError");
-                }
             }
 
-            var cartItem = new ShoppingCartItem
-            {
-                ShoppingCartID = userCart.ShoppingCartID,
-                ProductID = productID,
-                Quantity = quantity
-            };
+            var existingCartItem = userCart.ShoppingCartItems
+                .FirstOrDefault(item => item.ProductID == productID);
 
-            userCart.ShoppingCartItems.Add(cartItem);
+            if (existingCartItem != null)
+            {
+                existingCartItem.Quantity += quantity;
+            }
+            else
+            {
+                var cartItem = new ShoppingCartItem
+                {
+                    ShoppingCartID = userCart.ShoppingCartID,
+                    ProductID = productID,
+                    Quantity = quantity
+                };
+
+                userCart.ShoppingCartItems.Add(cartItem);
+                _dbContext.ShoppingCarts.AddOrUpdate(userCart);
+            }
 
             try
             {
@@ -194,7 +198,30 @@ namespace StorefrontApp.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = "Error adding item to shopping cart: " + ex.Message;
+                ViewBag.ErrorMessage = "Error adding the item to the shopping cart.";
+                return View("CustomError");
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> RemoveFromCart(int productID, int shoppingCartID)
+        {
+            var userCartItem = await _dbContext.ShoppingCartsItems
+                .Where(sci => sci.ShoppingCartID == shoppingCartID && sci.ProductID == productID)
+                .FirstOrDefaultAsync();
+
+            _dbContext.ShoppingCartsItems.Remove(userCartItem);
+
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = "Error removing the item from the shopping cart.";
                 return View("CustomError");
             }
 
@@ -214,6 +241,7 @@ namespace StorefrontApp.Controllers
             var userId = GetCurrentUserId();
             var user = await UserManager.FindByIdAsync(userId);
             var userWishlist = await _dbContext.Wishlists
+                .Include(sc => sc.WishlistItems) // Eagerly loading for the navigation propety of the collection of WishlistItems.
                 .Where(wl => wl.Account.HolderID == userId)
                 .FirstOrDefaultAsync();
 
@@ -221,30 +249,30 @@ namespace StorefrontApp.Controllers
             {
                 var wishList = new Wishlist
                 {
-                    AccountID = userId
+                    AccountID = userId,
+                    WishlistItems = new List<WishlistItem>()
                 };
-                _dbContext.Wishlists.Add(wishList);
-
-                try
-                {
-                    await _dbContext.SaveChangesAsync();
-                    userWishlist = wishList;    // Update reference, since the old one was empty/null.
-                }
-                catch (Exception ex)
-                {
-                    ViewBag.ErrorMessage = "Error creating a new wishlist: " + ex.Message;
-                    return View("CustomError");
-                }
             }
 
-            var wishlistItem = new WishlistItem
-            {
-                WishlistID = userWishlist.WishlistID,
-                ProductID = productID,
-                Quantity = quantity
-            };
+            var existingWishlistItem = userWishlist.WishlistItems
+                .FirstOrDefault(item => item.ProductID == productID);
 
-            userWishlist.WishlistItems.Add(wishlistItem);
+            if (existingWishlistItem != null)
+            {
+                existingWishlistItem.Quantity += quantity;
+            }
+            else
+            {
+                var wishlistItem = new WishlistItem
+                {
+                    WishlistID = userWishlist.WishlistID,
+                    ProductID = productID,
+                    Quantity = quantity
+                };
+
+                userWishlist.WishlistItems.Add(wishlistItem);
+                _dbContext.Wishlists.AddOrUpdate(userWishlist);
+            }
 
             try
             {
@@ -252,7 +280,30 @@ namespace StorefrontApp.Controllers
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = "Error adding item to the wishlist: " + ex.Message;
+                ViewBag.ErrorMessage = "Error adding the item to the wishlist.";
+                return View("CustomError");
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> RemoveFromWishlist(int productID, int wishlistID)
+        {
+            var wishlistItem = await _dbContext.WishlistItems
+                .Where(wli => wli.WishlistID == wishlistID && wli.ProductID == productID)
+                .FirstOrDefaultAsync();
+
+            _dbContext.WishlistItems.Remove(wishlistItem);
+
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = "Error removing the item from the wishlist.";
                 return View("CustomError");
             }
 

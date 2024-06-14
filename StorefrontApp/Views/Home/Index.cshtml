@@ -49,7 +49,7 @@
                     </div>
                 }
             }
-            <div class="col-lg">
+            <div class="col-lg-8">
                 <div class="container">
                     @if (Model.Products != null && Model.Products.Any())
                     {
@@ -116,7 +116,9 @@
             </div>
             @if (Model.ShoppingCart.Any() && Model.ShoppingCart != null)
             {
-                <div class="col-md-2">
+                
+                <div class="col-md-2 overflow-auto">
+                    <strong>Shopping Cart Items:</strong>
                     @foreach (var cart in Model.ShoppingCart)
                     {
                         <ul class="list-group">
@@ -125,8 +127,13 @@
                                 <li class="list-group-item">
                                     <div class="card">
                                         <div class="card-body">
-                                            <h4 class="card-title">@item.Product.ProductName</h4>
-                                            <h5 class="card-subtitle mb-2 text-muted">@item.Product.ProductType, Price: @item.Product.Price</h5>
+                                            <h6 class="card-title">@item.Product.ProductName</h6>
+                                            <h6 class="card-subtitle mb-2 text-muted">Price: @item.Product.Price<br />Qty: @item.Quantity</h6>
+                                            @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = cart.ShoppingCartID }, FormMethod.Post))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn btn-outline-danger">Remove</button>
+                                            }
                                         </div>
                                     </div>
                                 </li>

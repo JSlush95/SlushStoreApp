@@ -16,9 +16,11 @@ namespace StorefrontApp.Models
         public DbSet<Order> Sales { get; set; }
         public DbSet<ShippingAddress> ShippingAddresses { get; set; }
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
+        public DbSet<ShoppingCartItem> ShoppingCartsItems { get; set; }
         public DbSet<StoreAccount> StoreAccounts { get; set; }
         public DbSet<Supplier> Suppliers { get; set; }
         public DbSet<Wishlist> Wishlists { get; set; }
+        public DbSet<WishlistItem> WishlistItems { get; set; }
 
         public ApplicationDbContext()
             : base("DefaultConnection")
