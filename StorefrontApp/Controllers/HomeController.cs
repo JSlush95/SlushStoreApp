@@ -207,7 +207,7 @@ namespace StorefrontApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> RemoveFromCart(int productID, int shoppingCartID)
+        public async Task<ActionResult> RemoveFromCart(int productID, int shoppingCartID, string returnControllerPath)
         {
             var userCartItem = await _dbContext.ShoppingCartsItems
                 .Where(sci => sci.ShoppingCartID == shoppingCartID && sci.ProductID == productID)
@@ -225,7 +225,7 @@ namespace StorefrontApp.Controllers
                 return View("CustomError");
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", returnControllerPath);
         }
 
         [HttpPost]

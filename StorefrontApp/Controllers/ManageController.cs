@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
@@ -95,6 +96,9 @@ namespace StorefrontApp.Controllers
             var user = await UserManager.FindByIdAsync(userId);
             var userStoreAccountCount = _dbContext.StoreAccounts
                 .Where(sa => sa.HolderID == userId).Count();
+            var userShoppingCartItems = await _dbContext.ShoppingCartsItems
+                .Where(sci => sci.ShoppingCart.Account.HolderID == userId)
+                .ToListAsync();
 
             bool storeAccountCreated = userStoreAccountCount == 0 ? false : true;
 
@@ -106,7 +110,8 @@ namespace StorefrontApp.Controllers
                 Logins = await UserManager.GetLoginsAsync(userId),
                 BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(User.Identity.GetUserId()),
                 EmailConfirmed = user.EmailConfirmed,
-                StoreAccountCreated = storeAccountCreated
+                StoreAccountCreated = storeAccountCreated,
+                ShoppingCartItems = userShoppingCartItems
             };
             return View(model);
         }

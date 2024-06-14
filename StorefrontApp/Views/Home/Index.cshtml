@@ -49,7 +49,7 @@
                     </div>
                 }
             }
-            <div class="col-lg-8">
+            <div class="col-lg">
                 <div class="container">
                     @if (Model.Products != null && Model.Products.Any())
                     {
@@ -73,34 +73,21 @@
                                             <br />
                                             @if (Model.LoggedIn)
                                             {
-                                                <div class="row">
-                                                    <div class="col-auto align-content-end">
-                                                        <div class="row">
-                                                            <div class="col-auto">
-                                                                <div class="row">
-                                                                    <div class="col-auto">
-                                                                        @using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
-                                                                        {
-                                                                            @Html.AntiForgeryToken()
-                                                                            @Html.LabelFor(m => m.Quantity)
-                                                                            @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @Value = "0" })
-                                                                            <button type="submit" class="btn btn-outline-primary">Add to Cart</button>
-                                                                        }
-                                                                    </div>
-                                                                    <div class="col-auto">
-                                                                        @using (Html.BeginForm("AddToWishlist", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
-                                                                        {
-                                                                            @Html.AntiForgeryToken()
-                                                                            @Html.LabelFor(m => m.Quantity)
-                                                                            @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @Value = "0" })
-                                                                            <button type="submit" class="btn btn-outline-secondary">Add to Wishlist</button>
-                                                                        }
-                                                                    </div>
-                                                                </div>
-                                                            </div>
+                                                using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    <div class="row">
+                                                        <div class="col-auto">
+                                                            @Html.LabelFor(m => m.Quantity)
+                                                            @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @Value = "0" })
+                                                        </div>
+                                                        <div class="col-auto align-content-end" style="padding:0px">
+                                                            <i class="bi bi-arrow-left"></i>
+                                                            <button type="submit" class="btn btn-outline-primary">Add to Cart</button>
                                                         </div>
                                                     </div>
-                                                </div>
+
+                                                }
                                             }
                                         </div>
                                     </div>
@@ -129,7 +116,7 @@
                                         <div class="card-body">
                                             <h6 class="card-title">@item.Product.ProductName</h6>
                                             <h6 class="card-subtitle mb-2 text-muted">Price: @item.Product.Price<br />Qty: @item.Quantity</h6>
-                                            @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = cart.ShoppingCartID }, FormMethod.Post))
+                                            @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = cart.ShoppingCartID, returnControllerPath = "Home" }, FormMethod.Post))
                                             {
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-outline-danger">Remove</button>

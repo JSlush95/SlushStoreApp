@@ -15,6 +15,7 @@ namespace StorefrontApp.Models
         public bool EmailConfirmed { get; set; }
         public bool StoreAccountCreated { get; set; }
         public CreateStoreAccountViewModel CreateStoreAccountViewModel { get; set; }
+        public List<ShoppingCartItem> ShoppingCartItems { get; set; }
     }
 
     public class ManageLoginsViewModel

@@ -111,7 +111,46 @@
         }
         @if (Model.StoreAccountCreated)
         {
-            <p>Created.</p>
+            <h5>Current Shopping Cart:</h5>
+            if(Model.ShoppingCartItems.Count > 0 || Model.ShoppingCartItems != null)
+            {
+                <div class="accordion accordian-flush">
+                    @foreach (var item in Model.ShoppingCartItems)
+                    {
+                        var productId = item.Product.ProductID;
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading_@productId">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@productId" aria-expanded="false" aria-controls="collapse_@productId">
+                                    @item.Product.ProductName
+                                </button>
+                            </h2>
+                            <div class="accordion-collapse collapse" id="collapse_@productId" data-bs-parent="#shoppingCartAccordion">
+                                <div class="accordion-body">
+                                    Type: @item.Product.ProductType
+                                    <br />
+                                    Price: @item.Product.Price, Quantity: @item.Quantity
+                                    <br />
+                                    Description: @item.Product.ProductDescription
+                                    <br />
+                                    Supplier: @item.Product.Supplier.SupplierName
+                                    <br />
+                                    @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = item.ShoppingCartID, returnControllerPath = "Manage" }, FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-danger">Remove</button>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            } 
+            else 
+            { 
+                <div class="alert alert-primary">
+                    No shopping cart items.
+                </div>
+            }
         }
         else
         {
