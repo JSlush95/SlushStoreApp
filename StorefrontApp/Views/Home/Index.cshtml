@@ -18,27 +18,41 @@
                     {
                         @Html.AntiForgeryToken()
                         <div class="row">
-                            @Html.Label("Keyword Search")
-                            @Html.Label("(Name, Type, or Supplier)")
+                            @Html.LabelFor(m => m.SearchInput, new { @style = "text-decoration:underline" })
                             @Html.TextBoxFor(m => m.SearchInput, new { @class = "form-control" })
                         </div>
                         <br />
                         <div class="row">
-                            @Html.Label("Sort Options:")
+                            @Html.LabelFor(m => m.SortOptions, new { @style = "text-decoration:underline" })
                             @Html.EnumDropDownListFor(m => m.SortOptions, "Select Sort Option", new { @class = "form-control" })
                         </div>
                         <br />
-                        <div class="form-check">
-                            <label>Categories/Types:</label>
+                        <div class="form-check-types">
+                            @Html.LabelFor(m => m.ProductTypeOptions, new { @style="text-decoration:underline" })
                             <br>
-                            @foreach (var type in Model.ProductTypeOptions)
+                            @for (int i = 0; i < Model.ProductTypeOptions.Count; i++)
                             {
-                                <label>@type</label>
-                                @Html.CheckBox(type, new { @class = "form-check-input" })
+                                @Html.Label("", Model.ProductTypeOptions[i].NameOrType, new { @class = "form-check-label"});
+                                @Html.Raw("&nbsp")
+                                @Html.HiddenFor(m => m.ProductTypeOptions[i].NameOrType)
+                                @Html.CheckBoxFor(m => m.ProductTypeOptions[i].Checked, new { @class = "form-check-input", id = "productType_" + i })
                                 <br />
                             }
                             <br />
                         </div>
+                        <div class="form-check-suppliers">
+                            @Html.LabelFor(m => m.SuppliersList, new { @style= "text-decoration:underline" }) 
+                            <br />
+                            @for (int i = 0; i < Model.SuppliersList.Count; i++) 
+                            {
+                                @Html.Label("", Model.SuppliersList[i].NameOrType, new { @class = "form-check-label" })
+                                @Html.Raw("&nbsp")
+                                @Html.HiddenFor(m => m.SuppliersList[i].NameOrType)
+                                @Html.CheckBoxFor(m => m.SuppliersList[i].Checked, new { @class = "form-check-input", id = "supplierName_" + i })
+                                <br />
+                            }
+                        </div>
+                        <br />
                         <button type="submit" class="btn btn-outline-primary">Search</button>
                     }
                 </div>

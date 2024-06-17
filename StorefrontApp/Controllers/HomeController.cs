@@ -11,6 +11,7 @@ using Microsoft.AspNet.Identity;
 using System.Threading.Tasks;
 using System.Net;
 using System.Data.Entity.Migrations;
+using System.Web.WebPages;
 
 namespace StorefrontApp.Controllers
 {
@@ -65,9 +66,9 @@ namespace StorefrontApp.Controllers
             }
         }
 
-        public HashSet<string> GetProductTypes(DbSet<Product> products)
+        public List<CheckBoxItem> GetProductTypes(DbSet<Product> products)
         {
-            var productsList = new HashSet<string>();
+            var productsList = new List<CheckBoxItem>();
 
             if (products == null || !products.Any())
             {
@@ -76,10 +77,45 @@ namespace StorefrontApp.Controllers
 
             foreach (var product in products)
             {
-                productsList.Add(product.ProductType.ToLower());
+                if (!productsList.Any(x => x.NameOrType.Equals(product.ProductType, StringComparison.OrdinalIgnoreCase)))
+                {
+                    CheckBoxItem item = new CheckBoxItem()
+                    {
+                        NameOrType = product.ProductType,
+                        Checked = false
+                    };
+
+                    productsList.Add(item);
+                }
             }
 
             return productsList;
+        }
+
+        public List<CheckBoxItem> GetSuppliers(DbSet<Supplier> suppliers)
+        {
+            var suppliersList = new List<CheckBoxItem>();
+
+            if (suppliers == null || !suppliers.Any())
+            {
+                return null;
+            }
+
+            foreach (var supplier in suppliers)
+            {
+                if (!suppliersList.Any(x => x.NameOrType.Equals(supplier.SupplierName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    CheckBoxItem item = new CheckBoxItem()
+                    {
+                        NameOrType = supplier.SupplierName,
+                        Checked = false
+                    };
+
+                    suppliersList.Add(item);
+                }
+            }
+
+            return suppliersList;
         }
 
         private int GetCurrentUserId()
@@ -87,13 +123,35 @@ namespace StorefrontApp.Controllers
             return User.Identity.GetUserId<int>();
         }
 
-        public ActionResult Index(int? page, string searchQuery, HashSet<string> selectedTypes)
+        public ActionResult Index(int? page, HomeViewModel model)
         {
-            ViewBag.NameParam = String.IsNullOrEmpty(searchQuery) ? "name_desc" : "";
-            ViewBag.PriceParam = searchQuery == "Price" ? "price_desc" : "Price";
             var userId = GetCurrentUserId();
-            var products = _dbContext.Products;
-            var productsTypeList = GetProductTypes(products);
+            var productsSet = _dbContext.Products;
+            var suppliersSet = _dbContext.Suppliers;
+            List<CheckBoxItem> productsTypeList = model.ProductTypeOptions;
+            List<CheckBoxItem> suppliersList = model.SuppliersList;
+            Product[] filteredProducts;
+
+            /*
+             * Populating the ProductTypeOptions and SuppliersList, if they are not already populated.
+             */ 
+            if (productsTypeList == null || !productsTypeList.Any())
+            {
+                productsTypeList = GetProductTypes(productsSet);
+            }
+            if (suppliersList == null || !suppliersList.Any())
+            {
+                suppliersList = GetSuppliers(suppliersSet);
+            }
+
+            if (!string.IsNullOrEmpty(model.SearchInput) || productsTypeList.Any(x => x.Checked) || suppliersList.Any(x => x.Checked))
+            {
+                filteredProducts = FilterProducts(productsSet, model.SearchInput, productsTypeList, suppliersList).ToArray();
+            }
+            else
+            {
+                filteredProducts = productsSet.ToArray();
+            }
             
             var shoppingCart = _dbContext.ShoppingCarts
                 .Include(sc => sc.ShoppingCartItems) // Eagerly loading for the navigation propety of the collection of ShoppingCartItems.
@@ -104,30 +162,37 @@ namespace StorefrontApp.Controllers
 
             if (TempData.ContainsKey("Message"))
             {
-                ViewBag.Message = TempData["Message"].ToString();
+                ViewBag.Message = TempData["Message"];
             }
 
-            if (selectedTypes != null && selectedTypes.Any())
+            switch (model.SortOptions)
             {
-                products = (DbSet<Product>)products.Where(p => selectedTypes.Contains(p.ProductType));
-            }
-
-            switch (searchQuery)
-            {
-                case "name_desc":
-                    SortedProducts = products.OrderByDescending(p => p.ProductName);
+                case Sort.AscendingByName:
+                    SortedProducts = filteredProducts.OrderBy(p => p.ProductName);
                     break;
 
-                case "Price":
-                    SortedProducts = products.OrderBy(p => p.Price);
+                case Sort.DescendingByName:
+                    SortedProducts = filteredProducts.OrderByDescending(p => p.ProductName);
                     break;
 
-                case "price_desc":
-                    SortedProducts = products.OrderByDescending(p => p.Price);
+                case Sort.AscendingByPrice:
+                    SortedProducts = filteredProducts.OrderBy(p => p.Price);
+                    break;
+
+                case Sort.DescendingByPrice:
+                    SortedProducts = filteredProducts.OrderByDescending(p => p.Price);
+                    break;
+
+                case Sort.AscendingBySupplier:
+                    SortedProducts = filteredProducts.OrderBy(p => p.Supplier.SupplierName);
+                    break;
+
+                case Sort.DescendingBySupplier:
+                    SortedProducts = filteredProducts.OrderByDescending(p => p.Supplier.SupplierName);
                     break;
 
                 default:
-                    SortedProducts = products.OrderBy(p => p.ProductName);
+                    SortedProducts = filteredProducts.OrderBy(p => p.ProductID);
                     break;
             }
 
@@ -140,10 +205,34 @@ namespace StorefrontApp.Controllers
                 Products = paginatedProducts,
                 ShoppingCart = shoppingCart,
                 ProductTypeOptions = productsTypeList,
+                SuppliersList = suppliersList,
                 LoggedIn = User.Identity.IsAuthenticated,
             };
 
             return View(viewModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IQueryable<Product> FilterProducts(DbSet<Product> productsList, string searchInput, List<CheckBoxItem> productTypesChecked, List<CheckBoxItem> suppliersNamesChecked)
+        {
+           // Filtering by product types.
+            var checkedProductTypes = productTypesChecked
+                .Where(ptc => ptc.Checked)
+                .Select(ptc => ptc.NameOrType);
+            
+            // Filtering by supplier names.
+            var checkedSupplierNames = suppliersNamesChecked
+                .Where(snc => snc.Checked)
+                .Select(snc => snc.NameOrType);
+
+            // Filtering the products based on the search inputs and the names of the checkmarked objects only if they are aren't null.
+            var filteredProducts = productsList.Where(p =>
+                (string.IsNullOrEmpty(searchInput) || p.ProductName.Contains(searchInput)) &&
+                (!checkedProductTypes.Any() || checkedProductTypes.Contains(p.ProductType)) &&
+                (!checkedSupplierNames.Any() || checkedSupplierNames.Contains(p.Supplier.SupplierName)));
+
+            return filteredProducts;
         }
 
         [HttpPost]
