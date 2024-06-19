@@ -17,7 +17,7 @@ namespace StorefrontApp.Controllers
 {
     public static class Extensions
     {
-        // Necessary extension utility, as the generic type can be declared explicitly to avoid weird cases by being at mercy via type inference. 
+        // Necessary extension utility, as the generic type can be declared explicitly instead of type inference, which can be faulty at times.
         public static HashSet<T> ToHashSet<T>(
             this IEnumerable<T> source,
             IEqualityComparer<T> comparer = null)
@@ -69,6 +69,7 @@ namespace StorefrontApp.Controllers
         public List<CheckBoxItem> GetProductTypes(DbSet<Product> products)
         {
             var productsList = new List<CheckBoxItem>();
+            string[] selectedProducts;
 
             if (products == null || !products.Any())
             {
@@ -118,39 +119,79 @@ namespace StorefrontApp.Controllers
             return suppliersList;
         }
 
+        public List<string> GetCheckedItems(List<CheckBoxItem> itemsList)
+        {
+            var checkedItems = new List<string>();
+
+            foreach (var item in itemsList)
+            {
+                if (item.Checked)
+                {
+                    checkedItems.Add(item.NameOrType);
+                }
+            }
+
+            return checkedItems;
+        }
+
         private int GetCurrentUserId()
         {
             return User.Identity.GetUserId<int>();
         }
 
-        public ActionResult Index(int? page, HomeViewModel model)
+        public ActionResult Index(int? page, string searchInput, Sort? sortOptions, string selectedTypes, string selectedSuppliers, HomeViewModel model)
         {
             var userId = GetCurrentUserId();
             var productsSet = _dbContext.Products;
             var suppliersSet = _dbContext.Suppliers;
-            List<CheckBoxItem> productsTypeList = model.ProductTypeOptions;
-            List<CheckBoxItem> suppliersList = model.SuppliersList;
-            Product[] filteredProducts;
+            sortOptions = sortOptions ?? new Sort();
+            IQueryable<Product> filteredProducts;
+            List<string> checkedProducts, checkedSuppliers;
 
-            /*
-             * Populating the ProductTypeOptions and SuppliersList, if they are not already populated.
-             */ 
-            if (productsTypeList == null || !productsTypeList.Any())
-            {
-                productsTypeList = GetProductTypes(productsSet);
-            }
-            if (suppliersList == null || !suppliersList.Any())
-            {
-                suppliersList = GetSuppliers(suppliersSet);
-            }
+            // Null-coalescing operations. If the model's lists for products/suppliers are null, assign them into a new default list for modification.
+            List<CheckBoxItem> productsTypeList = model.ProductTypeOptions ?? GetProductTypes(productsSet);
+            List<CheckBoxItem> suppliersList = model.SuppliersList ?? GetSuppliers(suppliersSet);
 
-            if (!string.IsNullOrEmpty(model.SearchInput) || productsTypeList.Any(x => x.Checked) || suppliersList.Any(x => x.Checked))
+            // If the query string exists for product types, replace the default list with its checked elements.
+            if (selectedTypes != null)
             {
-                filteredProducts = FilterProducts(productsSet, model.SearchInput, productsTypeList, suppliersList).ToArray();
+                checkedProducts = selectedTypes.Split('+').ToList();
+                // The pagination functionality does not retain model data, therefore, we must manually inject it back in to retain past request state for the UX.
+                productsTypeList = RecreateOldChecklist(productsTypeList, checkedProducts);
             }
+            // Otherwise, extract which of the default products are checked.
             else
             {
-                filteredProducts = productsSet.ToArray();
+                checkedProducts = GetCheckedItems(productsTypeList);
+
+                // Creating the query string for the product types, then binding it for the view's pagination routing.
+                selectedTypes = string.Join("+", checkedProducts.ToArray());
+            }
+            // If the query string exists for suppliers, replace the default list with its checked elements.
+            if (selectedSuppliers != null)
+            {
+                checkedSuppliers = selectedSuppliers.Split('+').ToList();
+                // The pagination functionality does not retain model data, therefore, we must manually inject it back in to retain past request state for the UX.
+                suppliersList = RecreateOldChecklist(suppliersList, checkedSuppliers);
+            }
+            // Otherwise, extract which of the default suppliers are checked.
+            else
+            {   
+                checkedSuppliers = GetCheckedItems(suppliersList);
+
+                // Creating the query string for the suppliers, then binding it for the view's pagination routing.
+                selectedSuppliers = string.Join("+", checkedSuppliers.ToArray());
+            }
+
+            // If any filters exist, proceed to use them.
+            if (!string.IsNullOrEmpty(searchInput) || checkedProducts.Any() || checkedSuppliers.Any())
+            {
+                filteredProducts = FilterProducts(productsSet, searchInput, checkedProducts, checkedSuppliers);
+            }
+            // Otherwise, there exists no filters in place, use the original data.
+            else
+            {
+                filteredProducts = productsSet;
             }
             
             var shoppingCart = _dbContext.ShoppingCarts
@@ -158,81 +199,100 @@ namespace StorefrontApp.Controllers
                 .Where(sc => sc.Account.HolderID == userId)
                 .ToHashSet();
 
-            IEnumerable<Product> SortedProducts;
+            IQueryable<Product> sortedProducts;
 
             if (TempData.ContainsKey("Message"))
             {
                 ViewBag.Message = TempData["Message"];
             }
 
-            switch (model.SortOptions)
+            switch (sortOptions)
             {
                 case Sort.AscendingByName:
-                    SortedProducts = filteredProducts.OrderBy(p => p.ProductName);
+                    sortedProducts = filteredProducts.OrderBy(p => p.ProductName);
                     break;
 
                 case Sort.DescendingByName:
-                    SortedProducts = filteredProducts.OrderByDescending(p => p.ProductName);
+                    sortedProducts = filteredProducts.OrderByDescending(p => p.ProductName);
                     break;
 
                 case Sort.AscendingByPrice:
-                    SortedProducts = filteredProducts.OrderBy(p => p.Price);
+                    sortedProducts = filteredProducts.OrderBy(p => p.Price);
                     break;
 
                 case Sort.DescendingByPrice:
-                    SortedProducts = filteredProducts.OrderByDescending(p => p.Price);
+                    sortedProducts = filteredProducts.OrderByDescending(p => p.Price);
                     break;
 
                 case Sort.AscendingBySupplier:
-                    SortedProducts = filteredProducts.OrderBy(p => p.Supplier.SupplierName);
+                    sortedProducts = filteredProducts.OrderBy(p => p.Supplier.SupplierName);
                     break;
 
                 case Sort.DescendingBySupplier:
-                    SortedProducts = filteredProducts.OrderByDescending(p => p.Supplier.SupplierName);
+                    sortedProducts = filteredProducts.OrderByDescending(p => p.Supplier.SupplierName);
                     break;
 
                 default:
-                    SortedProducts = filteredProducts.OrderBy(p => p.ProductID);
+                    sortedProducts = filteredProducts.OrderBy(p => p.ProductID);
                     break;
             }
 
             int pageSize = 8;
             int pageNumber = (page ?? 1);
-            var paginatedProducts = SortedProducts.ToPagedList(pageNumber, pageSize);
+            var paginatedProducts = sortedProducts.ToPagedList(pageNumber, pageSize);
 
             var viewModel = new HomeViewModel
             {
                 Products = paginatedProducts,
                 ShoppingCart = shoppingCart,
+                SortOptions = (Sort)sortOptions,
+                SearchInput = searchInput,
                 ProductTypeOptions = productsTypeList,
                 SuppliersList = suppliersList,
+                SelectedProductTypes = selectedTypes,
+                SelectedSuppliers = selectedSuppliers,
                 LoggedIn = User.Identity.IsAuthenticated,
             };
 
             return View(viewModel);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IQueryable<Product> FilterProducts(DbSet<Product> productsList, string searchInput, List<CheckBoxItem> productTypesChecked, List<CheckBoxItem> suppliersNamesChecked)
+        public IQueryable<Product> FilterProducts(DbSet<Product> productsList, string searchInput, List<string> checkedProductTypes, List<string> checkedSupplierNames)
         {
-           // Filtering by product types.
-            var checkedProductTypes = productTypesChecked
-                .Where(ptc => ptc.Checked)
-                .Select(ptc => ptc.NameOrType);
-            
-            // Filtering by supplier names.
-            var checkedSupplierNames = suppliersNamesChecked
-                .Where(snc => snc.Checked)
-                .Select(snc => snc.NameOrType);
-
-            // Filtering the products based on the search inputs and the names of the checkmarked objects only if they are aren't null.
+           // Filtering the products based on the search inputs and the checked entities, only if they are aren't null.
             var filteredProducts = productsList.Where(p =>
                 (string.IsNullOrEmpty(searchInput) || p.ProductName.Contains(searchInput)) &&
                 (!checkedProductTypes.Any() || checkedProductTypes.Contains(p.ProductType)) &&
                 (!checkedSupplierNames.Any() || checkedSupplierNames.Contains(p.Supplier.SupplierName)));
 
             return filteredProducts;
+        }
+
+        public List<CheckBoxItem> RecreateOldChecklist(List<CheckBoxItem> itemsList, List<string> checkedItems)
+        {
+            List<CheckBoxItem> tempList = new List<CheckBoxItem>();
+
+            foreach(var item in itemsList)
+            {
+                // Initialize the temporary checklist item with the value that'll always happen, the name.
+                CheckBoxItem tempItem = new CheckBoxItem()
+                {
+                    NameOrType = item.NameOrType
+                    // Checked value will be decided whether it exists in the checkedItems list.
+                };
+
+                if (checkedItems.Contains(item.NameOrType))
+                {
+                    tempItem.Checked = true;
+                }
+                else
+                {
+                    tempItem.Checked = false;
+                }
+                tempList.Add(tempItem);
+            }
+
+            return tempList;
         }
 
         [HttpPost]
