@@ -9,11 +9,11 @@ namespace StorefrontApp.Models
 {
     public class ApplicationDbContext : IdentityDbContext<User, CustomRole, int, CustomUserLogin, CustomUserRole, CustomUserClaim>
     {
-        public DbSet<OrderItem> Orders {  get; set; }
         public DbSet<PaymentMethod> PaymentMethods { get; set; }
         public DbSet<Product> Products { get; set; }
         public DbSet<Review> Reviews { get; set; }
-        public DbSet<Order> Sales { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<ShippingAddress> ShippingAddresses { get; set; }
         public DbSet<ShoppingCart> ShoppingCarts { get; set; }
         public DbSet<ShoppingCartItem> ShoppingCartsItems { get; set; }

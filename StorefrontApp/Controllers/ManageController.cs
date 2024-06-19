@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Data.Entity;
+using System.Data.Entity.Migrations;
 using System.Linq;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
@@ -8,6 +11,7 @@ using BankingApp.Models;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
+using Newtonsoft.Json;
 using StorefrontApp.Models;
 
 namespace StorefrontApp.Controllers
@@ -18,6 +22,7 @@ namespace StorefrontApp.Controllers
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
         private ApplicationDbContext _dbContext;
+        private readonly Cryptography _cryptography;
 
         public ManageController()
             : this(new ApplicationDbContext(), null, null)
@@ -29,6 +34,7 @@ namespace StorefrontApp.Controllers
             ContextDbManager = context;
             UserManager = userManager;
             SignInManager = signInManager;
+            _cryptography = new Cryptography();
         }
 
         public ApplicationDbContext ContextDbManager
@@ -49,9 +55,9 @@ namespace StorefrontApp.Controllers
             {
                 return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
             }
-            private set 
-            { 
-                _signInManager = value; 
+            private set
+            {
+                _signInManager = value;
             }
         }
 
@@ -99,8 +105,18 @@ namespace StorefrontApp.Controllers
             var userShoppingCartItems = await _dbContext.ShoppingCartsItems
                 .Where(sci => sci.ShoppingCart.Account.HolderID == userId)
                 .ToListAsync();
+            var userOrderItems = await _dbContext.Orders
+                .Where(o => o.StoreAccount.HolderID == userId)
+                .ToListAsync();
+            var accountAlias = await _dbContext.StoreAccounts
+                .Where(u => u.HolderID == userId)
+                .Select(u => u.Alias)
+                .FirstOrDefaultAsync();
+            var userPaymentMethods = await _dbContext.PaymentMethods
+                .Where(pm => pm.Account.HolderID == userId)
+                .ToListAsync();
 
-            bool storeAccountCreated = userStoreAccountCount == 0 ? false : true;
+            bool storeAccountCreated = (userStoreAccountCount == 0) ? false : true;
 
             var model = new IndexViewModel
             {
@@ -111,21 +127,24 @@ namespace StorefrontApp.Controllers
                 BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(User.Identity.GetUserId()),
                 EmailConfirmed = user.EmailConfirmed,
                 StoreAccountCreated = storeAccountCreated,
-                ShoppingCartItems = userShoppingCartItems
+                Orders = userOrderItems,
+                AliasName = accountAlias,
+                ShoppingCartItems = userShoppingCartItems,
+                PaymentMethods = userPaymentMethods
             };
             return View(model);
         }
 
+        // POST: /Manage/CreateStoreAccount
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> CreateStoreAccount(CreateStoreAccountViewModel model)
+        public async Task<ActionResult> CreateStoreAccount(AccountType accountTypeInput, string accountAliasInput)
         {
             var userId = GetCurrentUserId();
-            var user = await UserManager.FindByIdAsync(userId);
 
             if (!ModelState.IsValid)
             {
-                TempData["Message"] = "Error with creating the store account.";
+                TempData["Message"] = "Error, please fill out the fields with valid data.";
                 return RedirectToAction("Index");
             }
 
@@ -133,12 +152,199 @@ namespace StorefrontApp.Controllers
             {
                 HolderID = userId,
                 DateOpened = DateTime.Now,
-                AccountType = model.AccountType,
+                Alias = accountAliasInput,
+                AccountType = accountTypeInput,
             };
 
-            _dbContext.StoreAccounts.Add(userStoreAccount);
-            var result = await _dbContext.SaveChangesAsync();
-            TempData["Message"] = "Success with creating the store account.";
+            try
+            {
+                _dbContext.StoreAccounts.Add(userStoreAccount);
+                await _dbContext.SaveChangesAsync();
+                TempData["Message"] = "Success with creating the store account.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Message"] = "Error with creating the store account.";
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        // POST: /Manage/AddPaymentMethod
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> AddPaymentMethod(string cardNumber, int? keyID)
+        {
+            var userId = GetCurrentUserId();
+
+            // Manual validation for cardNumber.
+            if (string.IsNullOrEmpty(cardNumber) || cardNumber.Length != 11)
+            {
+                TempData["Message"] = "The Card Number field must be a length of 11.";
+                return RedirectToAction("Index");
+            }
+
+            // Manual validation for KeyID.
+            if (keyID == null || (keyID < 10000 || keyID > 99999))
+            {
+                TempData["Message"] = "The Key ID field is required and must be between 10000 and 99999 (5 digits).";
+                return RedirectToAction("Index");
+            }
+
+            var userPaymentMethod = new PaymentMethod
+            {
+                AccountID = userId,
+                CardNumber = cardNumber,
+                KeyID = (int)keyID
+            };
+
+            // Duplication check.
+            var existingPaymentMethodForSameUser = await _dbContext.PaymentMethods
+                .Where(pm => (pm.CardNumber == cardNumber && pm.KeyID == keyID) && pm.Account.HolderID == userId)
+                .FirstOrDefaultAsync();
+
+            if (existingPaymentMethodForSameUser != null)
+            {
+                TempData["Message"] = "Please use a payment method that isn't registered for you already.";
+                return RedirectToAction("Index");
+            }
+
+            // Encrypting the KeyID.
+            var encryptedKeyID = _cryptography.EncryptID((int)keyID);
+
+            // Calling the Bank API.
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://localhost:44321/"); // Bank app's URL
+                string encodedCardNumber = HttpUtility.UrlEncode(cardNumber);
+                var response = await client.GetAsync($"api/VerifyCard?cardNumber={encodedCardNumber}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    TempData["Message"] = "Card validation failed.";
+                    return RedirectToAction("Index");
+                }
+
+                var result = await response.Content.ReadAsStringAsync();
+                if (result.Contains("Card is not active") || result.Contains("Unauthorized"))
+                {
+                    TempData["Message"] = result;
+                    return RedirectToAction("Index");
+                }
+            }
+
+            try
+            {
+                _dbContext.PaymentMethods.Add(userPaymentMethod);
+                await _dbContext.SaveChangesAsync();
+                TempData["Message"] = "Success with creating the payment method.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Message"] = "Error with creating the payment method.";
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> RemovePaymentMethod(int paymentMethodID)
+        {
+            var userPaymentMethod = await _dbContext.PaymentMethods
+                .Where(pm => pm.PaymentMethodID == paymentMethodID)
+                .FirstOrDefaultAsync();
+
+            var result = _dbContext.PaymentMethods.Remove(userPaymentMethod);
+
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+                TempData["Message"] = "Success with removing the payment method.";
+            }
+            catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = "Error with removing the payment method.";
+                return View("CustomError");
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        // GET: /Manage/CreateOrder
+        public ActionResult CreateOrder()
+        {
+            return View();
+        }
+
+        // POST: /Manage/CreateOrder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CreateOrder(CreateOrderViewModel model)
+        {
+            var userId = GetCurrentUserId();
+            var userCart = await _dbContext.ShoppingCarts
+                .Where(sc => sc.Account.HolderID == userId)
+                .FirstOrDefaultAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["Message"] = "Error with processing the order.";
+                return View(model);
+            }
+
+            var cardID = model.SelectedPaymentMethodID;
+            var card = await _dbContext.PaymentMethods
+                .Where(pm => pm.PaymentMethodID == cardID)
+                .FirstOrDefaultAsync();
+            var keyID = card.KeyID;
+
+            Cryptography cryptoClass = new Cryptography();
+            string encryptedKeyID = _cryptography.EncryptID(keyID);
+
+            // Calling the Bank API.
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://localhost:44321/");
+                string encodedCardNumber = HttpUtility.UrlEncode(card.CardNumber);
+                var response = await client.GetAsync($"api/InitiateTransaction?cardNumber={encodedCardNumber}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    TempData["Message"] = "Card validation failed.";
+                    return View(model);
+                }
+
+                var result = await response.Content.ReadAsStringAsync();
+                if (result.Contains("Card is not active") || result.Contains("Unauthorized"))
+                {
+                    TempData["Message"] = result;
+                    return View(model);
+                }
+            }
+
+            // Create the order
+
+            return RedirectToAction("Index");
+        }
+
+        // POST: /Manage/RefundOrder
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> RefundOrder(int orderID)
+        {
+            var refunderAlias = await _dbContext.Orders
+                .Where(o => o.OrderID == orderID)
+                .Select(o => o.StoreAccount.Alias)
+                .FirstOrDefaultAsync();
+
+            if (!ModelState.IsValid)
+            {
+                TempData["Message"] = "Error with processing the refund.";
+                return RedirectToAction("Index");
+            }
+
+            // ...
 
             return RedirectToAction("Index");
         }

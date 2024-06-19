@@ -19,12 +19,12 @@
                         @Html.AntiForgeryToken()
                         <div class="row">
                             @Html.LabelFor(m => m.SearchInput, new { @style = "text-decoration:underline" })
-                            @Html.TextBoxFor(m => m.SearchInput, new { @class = "form-control" })
+                            @Html.TextBoxFor(m => m.SearchInput, new { @class = "form-control", @Value=Model.SearchInput})
                         </div>
                         <br />
                         <div class="row">
                             @Html.LabelFor(m => m.SortOptions, new { @style = "text-decoration:underline" })
-                            @Html.EnumDropDownListFor(m => m.SortOptions, "Select Sort Option", new { @class = "form-control" })
+                            @Html.DropDownListFor(m => m.SortOptions, new SelectList(Enum.GetValues(typeof(StorefrontApp.Models.Sort))), new { @class = "form-control" })
                         </div>
                         <br />
                         <div class="form-check-types">
@@ -48,7 +48,7 @@
                                 @Html.Label("", Model.SuppliersList[i].NameOrType, new { @class = "form-check-label" })
                                 @Html.Raw("&nbsp")
                                 @Html.HiddenFor(m => m.SuppliersList[i].NameOrType)
-                                @Html.CheckBoxFor(m => m.SuppliersList[i].Checked, new { @class = "form-check-input", id = "supplierName_" + i })
+                                @Html.CheckBoxFor(m => m.SuppliersList[i].Checked, new { @class = "form-check-input", id = "supplierName_" + i  })
                                 <br />
                             }
                         </div>
@@ -56,9 +56,10 @@
                         <button type="submit" class="btn btn-outline-primary">Search</button>
                     }
                 </div>
+                <br />
                 if (ViewBag.Message != null)
                 {
-                    <div class="alert alert-warning" role="alert">
+                    <div class="alert alert-danger" role="alert">
                         @ViewBag.Message
                     </div>
                 }
@@ -85,7 +86,7 @@
                                                 <li class="list-group-item">Supplier: @product.Supplier.SupplierName</li>
                                             </ul>
                                             <br />
-                                            @if (Model.LoggedIn)
+                                            @if (Model.LoggedIn && Model.StoreAccountCreated)
                                             {
                                                 using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
                                                 {
@@ -147,6 +148,12 @@
     </div>
     <br />
     <div>
-        @Html.PagedListPager(Model.Products, page => Url.Action("Index", new { page, searchQuery = ViewBag.CurrentFilter }))
+        @Html.PagedListPager(Model.Products, page => Url.Action("Index", new {
+           page,
+           searchInput = Model.SearchInput,
+           sortOptions = Model.SortOptions,
+           selectedTypes = Model.SelectedProductTypes,
+           selectedSuppliers = Model.SelectedSuppliers
+        }))
     </div>
 </main>

@@ -15,6 +15,8 @@ namespace StorefrontApp.Models
         public int AccountID { get; set; }
         [Required]
         public int HolderID {  get; set; }
+        [MaxLength(256)]
+        public string Alias { get; set; }
         [Required]
         public DateTime DateOpened { get; set; }
         [Required]
@@ -26,7 +28,7 @@ namespace StorefrontApp.Models
 
     public enum AccountType
     {
-        Personal
-        //Business
+        Personal,
+        Business
     }
 }

@@ -26,23 +26,27 @@
             }
         </div>
         <br /><br />
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title"><u>Unconfirmed Account</u></h5>
-                <ul>
-                    <li class="card-text">If the email provided does not work, change it above.</li>
-                    @*<li class="card-text">Unconfirmed accounts can not use the storefront system.</li>*@
-                </ul>
-                @Html.ActionLink("Resend Confirmation Email", "ResendConfirmationEmail", "Account", null, new { @class = "btn btn-outline-primary"})
+        @if (!Model.EmailConfirmed)
+        {
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title"><u>Unconfirmed Account</u></h5>
+                    <ul>
+                        <li class="card-text">If the email provided does not work, change it above.</li>
+                        @*<li class="card-text">Unconfirmed accounts can not use the storefront system.</li>*@
+                    </ul>
+                    @Html.ActionLink("Resend Confirmation Email", "ResendConfirmationEmail", "Account", null, new { @class = "btn btn-outline-primary" })
+                </div>
             </div>
-        </div>
+
+        }
         <br /><br />
         <dt><u>Two-Factor Authentication</u></dt>
         <dd>
             @*<p>
-            There are no two-factor authentication providers configured. See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-            for details on setting up this ASP.NET application to support two-factor authentication.
-            </p>*@
+                There are no two-factor authentication providers configured. See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
+                for details on setting up this ASP.NET application to support two-factor authentication.
+                </p>*@
             @if (Model.TwoFactor)
             {
                 using (Html.BeginForm("DisableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
@@ -66,53 +70,131 @@
         </dd>
         <br />
         @*<dt>External Logins:</dt>
-        <dd>
-            @Model.Logins.Count [
-            @Html.ActionLink("Manage", "ManageLogins") ]
-        </dd>*@
+            <dd>
+                @Model.Logins.Count [
+                @Html.ActionLink("Manage", "ManageLogins") ]
+            </dd>*@
         @*
-        Phone Numbers can used as a second factor of verification in a two-factor authentication system.
+            Phone Numbers can used as a second factor of verification in a two-factor authentication system.
 
-        See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-            for details on setting up this ASP.NET application to support two-factor authentication using SMS.
+            See <a href="https://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
+                for details on setting up this ASP.NET application to support two-factor authentication using SMS.
 
-        Uncomment the following block after you have set up two-factor authentication
+            Uncomment the following block after you have set up two-factor authentication
         *@
         @*
-        <dt>Phone Number:</dt>
-        <dd>
-            @(Model.PhoneNumber ?? "None")
-            @if (Model.PhoneNumber != null)
-            {
-                <br />
-                <text>[&nbsp;&nbsp;@Html.ActionLink("Change", "AddPhoneNumber")&nbsp;&nbsp;]</text>
-                using (Html.BeginForm("RemovePhoneNumber", "Manage", FormMethod.Post, new { role = "form" }))
+            <dt>Phone Number:</dt>
+            <dd>
+                @(Model.PhoneNumber ?? "None")
+                @if (Model.PhoneNumber != null)
                 {
-                    @Html.AntiForgeryToken()
-                    <text>[<input type="submit" value="Remove" class="btn-link" />]</text>
+                    <br />
+                    <text>[&nbsp;&nbsp;@Html.ActionLink("Change", "AddPhoneNumber")&nbsp;&nbsp;]</text>
+                    using (Html.BeginForm("RemovePhoneNumber", "Manage", FormMethod.Post, new { role = "form" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        <text>[<input type="submit" value="Remove" class="btn-link" />]</text>
+                    }
                 }
-            }
-            else
-            {
-                <text>[&nbsp;&nbsp;@Html.ActionLink("Add", "AddPhoneNumber")
-            }
-        </dd>
+                else
+                {
+                    <text>[&nbsp;&nbsp;@Html.ActionLink("Add", "AddPhoneNumber")
+                }
+            </dd>
         *@
     </div>
     <br />
     <h2>Customer Account Settings:</h2>
-    <br />
+    <hr />
     <div>
         @if (ViewBag.Message != null)
         {
-        <div class="alert alert-warning" role="alert">
-            @ViewBag.Message
-        </div>
+            <div class="alert alert-primary" role="alert">
+                @ViewBag.Message
+            </div>
+            <br />
+        }
+        <strong>Payment Method Note:</strong>
+        <ul>
+            <li>The payment method is exclusively issued by the companion website, Slushbanking, no other ones will work.</li>
+            <li>The Key ID is a 5-digit non-negative, non-decimal number.</li>
+        </ul>
+        @using (Html.BeginForm("AddPaymentMethod", "Manage", FormMethod.Post, new { role = "form" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary("", new { @class = "text-danger" })
+            <div class="row">
+                @Html.LabelFor(m => m.CardNumber, new { @class = "col-md-2 col-form-label" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(m => m.CardNumber, new { @class = "form-control" })
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                @Html.LabelFor(m => m.KeyID, new { @class = "col-md-2 col-form-label" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(m => m.KeyID, new { @class = "form-control" })
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="offset-md-2 col-md-10">
+                    <input type="submit" value="Add Payment Method" class="btn btn-outline-primary" />
+                </div>
+            </div>
+        }
+        <br />
+        @if (Model.PaymentMethods != null && Model.PaymentMethods.Count > 0)
+        {
+            <hr />
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr class="table-dark">
+                        <th scope="col">Card Number</th>
+                        <th scope="col">Key ID</th>
+                        <th scope="col">Remove Method</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var paymentMethod in Model.PaymentMethods)
+                    {
+                        <tr>
+                            <td>@paymentMethod.CardNumber</td>
+                            <td>@paymentMethod.KeyID</td>
+                            <td>
+                                @using (Html.BeginForm("RemovePaymentMethod", "Manage", new { paymentMethodID = paymentMethod.PaymentMethodID }, FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-primary">Remove</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <hr />
+            <br />
+        }
+        else
+        {
+            <hr />
+            <div class="alert alert-primary" role="alert">
+                Could not find any payment methods. Please use ones only from the companion banking website: SlushBanking.
+            </div>
+            <hr />
+            <br />
         }
         @if (Model.StoreAccountCreated)
         {
+            <details>
+                <p class="lead">
+                    <summary><strong>Account Alias:</strong></summary>
+                    &emsp;@Model.AliasName
+                </p>
+            </details>
+            <br /><br />
             <h5>Current Shopping Cart:</h5>
-            if(Model.ShoppingCartItems.Count > 0 || Model.ShoppingCartItems != null)
+            if (Model.ShoppingCartItems != null && Model.ShoppingCartItems.Count > 0)
             {
                 <div class="accordion accordian-flush">
                     @foreach (var item in Model.ShoppingCartItems)
@@ -143,31 +225,99 @@
                             </div>
                         </div>
                     }
+                    <div class="accordion-body">
+                        <h5>Proceed To Checkout:</h5>
+                        @Html.ActionLink("Checkout", "CreateOrder", "Manage", null, new { @class = "btn btn-outline-primary" })
+                    </div>
                 </div>
-            } 
-            else 
-            { 
+                <hr />
+            }
+            <br /><br />
+            if (Model.Orders != null && Model.Orders.Count > 0)
+            {
+
+                foreach (var order in Model.Orders)
+                {
+                    <div class="accordian-flush">
+                        @foreach (var item in order.OrderItems)
+                        {
+                            var orderItemID = item.Product.ProductID;
+                            <h2 class="accordion-header" id="heading_@orderItemID">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@orderItemID" aria-expanded="false" aria-controls="collapse_@orderItemID">
+                                    @item.Product.ProductName
+                                </button>
+                            </h2>
+                            <div class="accordion-collapse collapse" id="collapse_@orderItemID" data-bs-parent="#ordersAccordion">
+                                <div class="accordion-body">
+                                    Type: @item.Product.ProductType
+                                    <br />
+                                    Price: @item.Product.Price, Quantity: @item.Quantity, Total: @(item.Product.Price * item.Quantity)
+                                    <br />
+                                    Description: @item.Product.ProductDescription
+                                    <br />
+                                    Supplier: @item.Product.Supplier.SupplierName
+                                </div>
+                            </div>
+                        }
+                        <div class="accordion-body">
+                            <h2>Total Order Price: @order.TotalPrice, Status: @order.Status</h2>
+                            <br />
+                            @using (Html.BeginForm("RefundOrder", "Manage", new { orderID = order.OrderID }, FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-outline-primary">Refund</button>
+                            }
+                        </div>
+                    </div>
+                    <br />
+                }
+                <hr />
+            }
+            else
+            {
                 <div class="alert alert-primary">
                     No shopping cart items.
                 </div>
+                <br />
             }
         }
         else
         {
-            <strong>Store Account Created Not Created</strong>
+            <strong>Store Account Not Created</strong>
             <ul>
                 <li>A store account is needed to interact with the store system.</li>
-                <li>This store account will hold a shopping cart, wishlist, and orders.</li>
+                <li>An account alias is needed to interact with the companion storefront website.</li>
+                <li>The account alias must match the same one used for the companion bank website.</li>
+                <li>An account alias cannot already be in use, make it strong.</li>
             </ul>
+            <br />
             using (Html.BeginForm("CreateStoreAccount", "Manage", FormMethod.Post, new { role = "form" }))
             {
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary("", new { @class = "text-danger" })
                 <div class="row">
-                    @Html.LabelFor(m => m.CreateStoreAccountViewModel.AccountType, new { @class = "col-md-2 col-form-label" })
+                    @Html.LabelFor(m => m.AccountTypeInput, new { @class = "col-md-2 col-form-label" })
                     <div class="col-md-10">
-                        @Html.EnumDropDownListFor(m => m.CreateStoreAccountViewModel.AccountType, new { @class = "form-control" })
-                        <button type="submit" class="btn btn-outline-primary">Create</button>
+                        @{
+                            var accountTypes = Enum.GetValues(typeof(StorefrontApp.Models.AccountType))
+                                               .Cast<StorefrontApp.Models.AccountType>()
+                                               .Where(e => e == StorefrontApp.Models.AccountType.Personal);
+                            var selectList = new SelectList(accountTypes);
+                        }
+                        @Html.DropDownListFor(m => m.AccountTypeInput, selectList, new { @class = "form-control" })
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    @Html.LabelFor(m => m.AccountAliasInput, new { @class = "col-md-2 col-form-label" })
+                    <div class="col-md-10">
+                        @Html.TextBoxFor(m => m.AccountAliasInput, new { @class = "form-control" })
+                    </div>
+                </div>
+                <br />
+                <div class="row">
+                    <div class="offset-md-2 col-md-10">
+                        <input type="submit" value="Create Store Account" class="btn btn-outline-primary" />
                     </div>
                 </div>
                 <br />

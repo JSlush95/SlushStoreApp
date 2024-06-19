@@ -181,6 +181,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AccountViewModels.cs" />
+    <Compile Include="Models\Cryptography.cs" />
     <Compile Include="Models\HomeViewModel.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
@@ -280,6 +281,7 @@
     <Content Include="Views\Account\EmailConfirmationSent.cshtml" />
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Shared\CustomError.cshtml" />
+    <Content Include="Views\Manage\CreateOrder.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

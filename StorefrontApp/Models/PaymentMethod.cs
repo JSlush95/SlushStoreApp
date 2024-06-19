@@ -15,7 +15,11 @@ namespace StorefrontApp.Models
         [Required]
         public int AccountID { get; set; }
         [Required]
+        [StringLength(11)]
         public string CardNumber { get; set; }
+        [Required]
+        [Range(10000, 99999)]
+        public int KeyID { get; set; }
 
         [ForeignKey("AccountID")]
         public virtual StoreAccount Account { get; set; }

@@ -15,12 +15,12 @@ namespace StorefrontApp.Models
         public HashSet<ShoppingCart> ShoppingCart { get; set; }
         [Display(Name = "Types")]
         public List<CheckBoxItem> ProductTypeOptions { get; set; }
+        public string SelectedProductTypes {  get; set; }
         [Display(Name = "Suppliers")]
         public List<CheckBoxItem> SuppliersList { get; set; }
+        public string SelectedSuppliers {  get; set; }
         [Display(Name = "Search by Name")]
         public string SearchInput { get; set; }
-        [Required]
-        public string SortStyleSelect { get; set; }
         [Display(Name = "Sort Options")]
         public Sort SortOptions { get; set; }
         [Required]
@@ -28,6 +28,8 @@ namespace StorefrontApp.Models
         [Range(0, Int32.MaxValue, ErrorMessage = "Please enter a valid quantity.")]
         public int Quantity { get; set; }
         public bool LoggedIn { get; set; }
+        public bool NextPage {  get; set; }
+        public bool StoreAccountCreated {  get; set; }
     }
 
     public class CheckBoxItem

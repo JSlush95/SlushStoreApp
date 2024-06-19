@@ -22,6 +22,8 @@ namespace StorefrontApp.Models
         [Required(AllowEmptyStrings = true)]
         public string ShippingAddress { get; set; }
         [Required]
+        public string Certificate {  get; set; }
+        [Required]
         public OrderStatus Status { get; set; }
         [Required]
         public DateTime PurchaseDate { get; set; }

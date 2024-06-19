@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.Owin.Security;
+using CompareAttribute = System.ComponentModel.DataAnnotations.CompareAttribute;
 
 namespace StorefrontApp.Models
 {
@@ -14,8 +16,25 @@ namespace StorefrontApp.Models
         public bool BrowserRemembered { get; set; }
         public bool EmailConfirmed { get; set; }
         public bool StoreAccountCreated { get; set; }
-        public CreateStoreAccountViewModel CreateStoreAccountViewModel { get; set; }
+        public string AliasName { get; set; }
+        [Required]
+        [StringLength(11)]
+        [Display(Name = "Card Number")]
+        public string CardNumber { get; set; }
+        [Required]
+        [Display(Name = "Key ID")]
+        [Range(10000, 99999)]
+        public int KeyID { get; set; }
+        [Required]
+        [Display(Name = "Account Type")]
+        public AccountType AccountTypeInput { get; set; }
+        [Required]
+        [Display(Name = "Account Alias")]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
+        public string AccountAliasInput { get; set; }
         public List<ShoppingCartItem> ShoppingCartItems { get; set; }
+        public List<Order> Orders { get; set; }
+        public List<PaymentMethod> PaymentMethods { get; set; }
     }
 
     public class ManageLoginsViewModel
@@ -94,11 +113,28 @@ namespace StorefrontApp.Models
         public string ConfirmPassword { get; set; }
     }
 
+    public class CreateOrderViewModel
+    {
+        [Required]
+        public List<ShoppingCartItem> ShoppingCartItems { get; set; }
+        [Required]
+        public List<PaymentMethod> PaymentMethods { get; set; }
+        [Required]
+        public int SelectedPaymentMethodID { get; set; }
+        [Required]
+        public string ShippingAddress { get; set; }
+    }
+
     public class CreateStoreAccountViewModel
     {
         [Required]
         [Display(Name = "Account Type")]
-        public AccountType AccountType { get; set; }
+        public AccountType AccountTypeInput { get; set; }
+
+        [Required]
+        [Display(Name = "Account Alias")]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
+        public string AccountAliasInput { get; set; }
     }
 
     public class AddPhoneNumberViewModel

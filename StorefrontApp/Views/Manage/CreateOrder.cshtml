@@ -1,0 +1,54 @@
+﻿@model StorefrontApp.Models.CreateOrderViewModel
+
+@{
+    ViewBag.Title = "Create Order";
+}
+
+<h2 id="title">@ViewBag.Title</h2>
+@using (Html.BeginForm("CreateOrder", "Order", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-group">
+        @Html.LabelFor(m => m.ShippingAddress, new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.TextBoxFor(m => m.ShippingAddress, new { @class = "form-control", placeholder = "Enter your shipping address" })
+            @Html.ValidationMessageFor(m => m.ShippingAddress, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-md-2">Payment Method</label>
+        <div class="col-md-10">
+            @Html.DropDownListFor(m => m.SelectedPaymentMethodID, new SelectList(Model.PaymentMethods, "PaymentMethodID", "MethodName"), "Select a payment method", new { @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.SelectedPaymentMethodID, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <h3>Shopping Cart Items</h3>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Product Type</th>
+                <th>Quantity</th>
+                <th>Individual Price</th>
+                <th>Total Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.ShoppingCartItems)
+            {
+                <tr>
+                    <td>@item.Product.ProductName</td>
+                    <td>@item.Product.ProductType</td>
+                    <td>@item.Quantity</td>
+                    <td>@item.Product.Price</td>
+                    <td>@(item.Product.Price * item.Quantity)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Place Order" class="btn btn-primary" />
+        </div>
+    </div>
+}
