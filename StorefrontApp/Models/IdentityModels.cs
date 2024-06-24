@@ -120,6 +120,10 @@ namespace StorefrontApp.Models
                 .HasForeignKey(wli => wli.WishlistID)
                 .WillCascadeOnDelete(false);
 
+            modelBuilder.Entity<User>()
+                .HasIndex(account => account.Email)
+                .IsUnique();
+
             /*
              *  Configuring the explicit relationships.
              */

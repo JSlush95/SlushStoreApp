@@ -8,6 +8,7 @@
 @using (Html.BeginForm("CreateOrder", "Order", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
 {
     @Html.AntiForgeryToken()
+    @Html.ValidationSummary("", new { @class = "text-danger" })
     <div class="form-group">
         @Html.LabelFor(m => m.ShippingAddress, new { @class = "control-label col-md-2" })
         <div class="col-md-10">
@@ -16,9 +17,16 @@
         </div>
     </div>
     <div class="form-group">
-        <label class="control-label col-md-2">Payment Method</label>
+        @Html.LabelFor(m => m.PaymentMethods, new { @class = "col-md-2 col-form-label" })
         <div class="col-md-10">
-            @Html.DropDownListFor(m => m.SelectedPaymentMethodID, new SelectList(Model.PaymentMethods, "PaymentMethodID", "MethodName"), "Select a payment method", new { @class = "form-control" })
+            @Html.DropDownListFor(m => m.PaymentMethods, new SelectList(Model.PaymentMethods, "PaymentMethodID"), "Select a payment method", new { @class = "form-control" })
+            @Html.ValidationMessageFor(m => m.PaymentMethods, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(m => m.SelectedPaymentMethodID, new { @class = "col-md-2 col-form-label" })
+        <div class="col-md-10">
+            @Html.TextBoxFor(m => m.SelectedPaymentMethodID, new { @class = "form-control" })
             @Html.ValidationMessageFor(m => m.SelectedPaymentMethodID, "", new { @class = "text-danger" })
         </div>
     </div>

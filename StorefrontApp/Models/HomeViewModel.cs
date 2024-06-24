@@ -28,7 +28,6 @@ namespace StorefrontApp.Models
         [Range(0, Int32.MaxValue, ErrorMessage = "Please enter a valid quantity.")]
         public int Quantity { get; set; }
         public bool LoggedIn { get; set; }
-        public bool NextPage {  get; set; }
         public bool StoreAccountCreated {  get; set; }
     }
 
