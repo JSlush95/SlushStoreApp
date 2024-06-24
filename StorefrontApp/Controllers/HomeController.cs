@@ -69,6 +69,7 @@ namespace StorefrontApp.Controllers
         public List<CheckBoxItem> GetProductTypes(DbSet<Product> products)
         {
             var productsList = new List<CheckBoxItem>();
+            string[] selectedProducts;
 
             if (products == null || !products.Any())
             {
@@ -211,6 +212,17 @@ namespace StorefrontApp.Controllers
                 // Creating the query string for the suppliers, then binding it for the view's pagination routing.
                 selectedSuppliers = string.Join("+", checkedSuppliers.ToArray());
             }
+            // If the query string exists for suppliers, replace the default list with its checked elements.
+            if (selectedSuppliers != null)
+            {
+                checkedSuppliers = selectedSuppliers.Split('+').ToList();
+                // The pagination functionality does not retain model data, therefore, we must manually inject it back in to retain past request state for the UX.
+                suppliersList = RecreateOldChecklist(suppliersList, checkedSuppliers);
+            }
+            // Otherwise, extract which of the default suppliers are checked.
+            else
+            {   
+                checkedSuppliers = GetCheckedItems(suppliersList);
 
             // If any filters exist, proceed to use them.
             if (!string.IsNullOrEmpty(searchInput) || checkedProducts.Any() || checkedSuppliers.Any())
