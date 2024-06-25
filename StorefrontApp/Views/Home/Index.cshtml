@@ -57,12 +57,6 @@
                     }
                 </div>
                 <br />
-                if (ViewBag.Message != null)
-                {
-                    <div class="alert alert-danger" role="alert">
-                        @ViewBag.Message
-                    </div>
-                }
             }
             <div class="col-lg">
                 <div class="container">
@@ -116,22 +110,21 @@
                     }
                 </div>
             </div>
-            @if (Model.ShoppingCart.Any() && Model.ShoppingCart != null)
+            @if (Model.ShoppingCartItems != null && Model.ShoppingCartItems.Any())
             {
-                
-                <div class="col-md-2 overflow-auto">
+                <div class="col-md-2">
                     <strong>Shopping Cart Items:</strong>
-                    @foreach (var cart in Model.ShoppingCart)
-                    {
+                    <br />
+                    <div class="overflow-auto" style="max-height: 900px; border: 1px solid #ddd; padding: 5px;">
                         <ul class="list-group">
-                            @foreach (var item in cart.ShoppingCartItems)
+                            @foreach (var item in Model.ShoppingCartItems)
                             {
                                 <li class="list-group-item">
                                     <div class="card">
                                         <div class="card-body">
                                             <h6 class="card-title">@item.Product.ProductName</h6>
                                             <h6 class="card-subtitle mb-2 text-muted">Price: @item.Product.Price<br />Qty: @item.Quantity</h6>
-                                            @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = cart.ShoppingCartID, returnControllerPath = "Home" }, FormMethod.Post))
+                                            @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = item.ShoppingCartID, returnControllerPath = "Home" }, FormMethod.Post))
                                             {
                                                 @Html.AntiForgeryToken()
                                                 <button type="submit" class="btn btn-outline-danger">Remove</button>
@@ -141,7 +134,7 @@
                                 </li>
                             }
                         </ul>
-                    }
+                    </div>
                 </div>
             }
         </div>

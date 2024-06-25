@@ -21,7 +21,7 @@ namespace StorefrontApp.Models
         [Required]
         public string ProductType { get; set; }
         [Required]
-        public float Price { get; set; }
+        public decimal Price { get; set; }
         public int? Stock {  get; set; }
         
         [ForeignKey("SupplierID")]

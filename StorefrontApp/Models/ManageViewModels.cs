@@ -16,6 +16,8 @@ namespace StorefrontApp.Models
         public bool BrowserRemembered { get; set; }
         public bool EmailConfirmed { get; set; }
         public bool StoreAccountCreated { get; set; }
+        [Display(Name = "Alias Name")]
+        public string ChangeAliasInput {  get; set; }
         public string AliasName { get; set; }
         [Required]
         [StringLength(11)]
@@ -116,13 +118,13 @@ namespace StorefrontApp.Models
     public class CreateOrderViewModel
     {
         [Required]
-        public List<ShoppingCartItem> ShoppingCartItems { get; set; }
+        [Display(Name = "Current Payment Methods")]
+        public int SelectedPaymentMethodID {  get; set; }
         [Required]
-        public List<PaymentMethod> PaymentMethods { get; set; }
-        [Required]
-        public int SelectedPaymentMethodID { get; set; }
-        [Required]
+        [Display(Name = "Shipping Address")]
         public string ShippingAddress { get; set; }
+        public List<PaymentMethod> PaymentMethods { get; set; }
+        public List<ShoppingCartItem> ShoppingCartItems { get; set; }
     }
 
     public class CreateStoreAccountViewModel

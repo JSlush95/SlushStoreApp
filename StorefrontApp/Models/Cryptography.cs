@@ -17,13 +17,13 @@ namespace StorefrontApp.Models
             _publicKey = ConfigurationManager.AppSettings["PublicKey"];
         }
 
-        public string EncryptID(int keyID)
+        public string EncryptValue(string value)
         {
             using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
             {
                 rsa.FromXmlString(_publicKey);
 
-                var keyIDBytes = Encoding.UTF8.GetBytes(keyID.ToString());
+                var keyIDBytes = Encoding.UTF8.GetBytes(value);
                 var encryptedBytesID = rsa.Encrypt(keyIDBytes, RSAEncryptionPadding.Pkcs1);
 
                 return Convert.ToBase64String(encryptedBytesID);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Data.Entity.Migrations;
 using System.Linq;
@@ -13,6 +14,7 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Newtonsoft.Json;
 using StorefrontApp.Models;
+using StorefrontApp.Utilities;
 
 namespace StorefrontApp.Controllers
 {
@@ -170,6 +172,45 @@ namespace StorefrontApp.Controllers
             return RedirectToAction("Index");
         }
 
+        // POST: /Manage/SetAccountAlias
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> SetAccountAlias(string ChangeAliasInput)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Message"] = "Error, please fill out the fields with valid data.";
+                return RedirectToAction("Index");
+            }
+
+            var userId = GetCurrentUserId();
+            var userAccount = await _dbContext.StoreAccounts
+                .Where(sa => sa.HolderID == userId)
+                .FirstOrDefaultAsync();
+            var existingUser = await _dbContext.StoreAccounts
+                .Where(sa => sa.Alias == ChangeAliasInput)
+                .FirstOrDefaultAsync();
+
+            if (existingUser != null)
+            {
+                TempData["Message"] = "This alias is already in use. Use a different one.";
+                return RedirectToAction("Index");
+            }
+
+            try
+            {
+                userAccount.Alias = ChangeAliasInput;
+                await _dbContext.SaveChangesAsync();
+                TempData["Message"] = "Success with changing the account alias.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Message"] = "Error with creating the store account.";
+            }
+
+            return RedirectToAction("Index");
+        }
+
         // POST: /Manage/AddPaymentMethod
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -210,14 +251,14 @@ namespace StorefrontApp.Controllers
             }
 
             // Encrypting the KeyID.
-            var encryptedKeyID = _cryptography.EncryptID((int)keyID);
+            var encryptedKeyID = _cryptography.EncryptValue(keyID.ToString());
+            var encryptedCardNumber = _cryptography.EncryptValue(cardNumber);
 
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/"); // Bank app's URL
-                string encodedCardNumber = HttpUtility.UrlEncode(cardNumber);
-                var response = await client.GetAsync($"api/VerifyCard?cardNumber={encodedCardNumber}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}");
+                var response = await client.GetAsync($"api/VerifyCard?encryptedCardNumber={Uri.EscapeDataString(encryptedCardNumber)}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -272,9 +313,25 @@ namespace StorefrontApp.Controllers
         }
 
         // GET: /Manage/CreateOrder
-        public ActionResult CreateOrder()
+        public async Task<ActionResult> CreateOrder()
         {
-            return View();
+            var userId = GetCurrentUserId();
+
+            var shoppingCartItems = await _dbContext.ShoppingCartsItems
+                .Where(sci => sci.ShoppingCart.Account.HolderID == userId)
+                .ToListAsync();
+
+            var paymentMethods = await _dbContext.PaymentMethods
+                .Where(pm => pm.Account.HolderID == userId)
+                .ToListAsync();
+
+            var model = new CreateOrderViewModel
+            {
+                ShoppingCartItems = shoppingCartItems,
+                PaymentMethods = paymentMethods
+            };
+
+            return View(model);
         }
 
         // POST: /Manage/CreateOrder
@@ -286,6 +343,11 @@ namespace StorefrontApp.Controllers
             var userCart = await _dbContext.ShoppingCarts
                 .Where(sc => sc.Account.HolderID == userId)
                 .FirstOrDefaultAsync();
+            var paymentMethods = await _dbContext.PaymentMethods
+                .Where(pm => pm.Account.HolderID == userId)
+                .ToListAsync();
+            model.ShoppingCartItems = userCart.ShoppingCartItems.ToList();
+            model.PaymentMethods = paymentMethods;
 
             if (!ModelState.IsValid)
             {
@@ -293,37 +355,110 @@ namespace StorefrontApp.Controllers
                 return View(model);
             }
 
-            var cardID = model.SelectedPaymentMethodID;
-            var card = await _dbContext.PaymentMethods
-                .Where(pm => pm.PaymentMethodID == cardID)
-                .FirstOrDefaultAsync();
-            var keyID = card.KeyID;
+            var paymentMethod = _dbContext.PaymentMethods
+                .Where(pm => pm.PaymentMethodID == model.SelectedPaymentMethodID)
+                .FirstOrDefault();
 
-            Cryptography cryptoClass = new Cryptography();
-            string encryptedKeyID = _cryptography.EncryptID(keyID);
+            var encryptedKeyID = _cryptography.EncryptValue(paymentMethod.KeyID.ToString());
+            var encryptedCardNumber = _cryptography.EncryptValue(paymentMethod.CardNumber);
+
+            decimal totalPrice = 0;
+            List<OrderItem> items = new List<OrderItem>();
+
+            Order order = new Order
+            {
+                BuyerID = userId,
+                PaymentMethodID = model.SelectedPaymentMethodID,
+                CertificatePairs = new List<Certificate>(),
+                ShippingAddress = model.ShippingAddress,
+                OrderItems = new List<OrderItem>()
+            };
+
+            foreach (var item in userCart.ShoppingCartItems)
+            {
+                totalPrice += item.Product.Price * item.Quantity;
+
+                OrderItem orderItem = new OrderItem
+                {
+                    OrderID = order.OrderID,
+                    ProductID = item.Product.ProductID,
+                    Quantity = item.Quantity
+                };
+
+                items.Add(orderItem);
+            }
+
+            // Grouping the items by vendor alias.
+            var vendorGroups = userCart.ShoppingCartItems
+                .GroupBy(item => item.Product.Supplier.Account.Alias)
+                .Select(group => new
+                {
+                    VendorAlias = group.Key,
+                    TotalAmount = group.Sum(item => item.Product.Price * item.Quantity)
+                });
 
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/");
-                string encodedCardNumber = HttpUtility.UrlEncode(card.CardNumber);
-                var response = await client.GetAsync($"api/InitiateTransaction?cardNumber={encodedCardNumber}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}");
-
-                if (!response.IsSuccessStatusCode)
+                foreach (var vendor in vendorGroups)
                 {
-                    TempData["Message"] = "Card validation failed.";
-                    return View(model);
-                }
+                    var response = await client.GetAsync($"api/InitiateTransaction?encryptedCardNumber={Uri.EscapeDataString(encryptedCardNumber)}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}&vendorAccountAlias={Uri.EscapeDataString(vendor.VendorAlias)}&paymentAmount={vendor.TotalAmount}");
 
-                var result = await response.Content.ReadAsStringAsync();
-                if (result.Contains("Card is not active") || result.Contains("Unauthorized"))
-                {
-                    TempData["Message"] = result;
-                    return View(model);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Log.Warn($"Card validation failed for vendor {vendor.VendorAlias}.");
+                        TempData["Message"] = $"Card validation failed.";
+                        return View(model);
+                    }
+
+                    if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                    {
+                        Log.Warn($"The server failed to validate the payment information for vendor {vendor.VendorAlias}.");
+                        TempData["Message"] = $"The server failed to validate the payment information.";
+                        return View(model);
+                    }
+
+                    string content = await response.Content.ReadAsStringAsync();
+
+                    if (content.Contains("Not enough funds for this transaction of purchase"))
+                    {
+                        TempData["Message"] = $"Not enough money to complete this transaction.";
+                        return View(model);
+                    }
+
+                    string certificate = content.Substring(content.IndexOf("Certificate:") + 12).Trim();
+                    var customerAlias = await _dbContext.StoreAccounts
+                        .Where(sa => sa.HolderID == userId)
+                        .Select(sa => sa.Alias)
+                        .FirstOrDefaultAsync();
+
+                    Certificate certificateItem = new Certificate
+                    {
+                        CertificateValue = certificate,
+                        VendorAlias = vendor.VendorAlias,
+                        CustomerAlias = customerAlias
+                    };
+
+                    order.CertificatePairs.Add(certificateItem);
                 }
             }
+            order.OrderItems = items;
+            order.TotalPrice = totalPrice;
+            order.PurchaseDate = DateTime.Now;
+            order.Status = OrderStatus.Approved;
 
-            // Create the order
+            try
+            {
+                _dbContext.Orders.Add(order);
+                _dbContext.ShoppingCartsItems.RemoveRange(userCart.ShoppingCartItems);
+                await _dbContext.SaveChangesAsync();
+            }catch (Exception ex)
+            {
+                ViewBag.ErrorMessage = "Internal error with completing the order.";
+                Log.Warn($"Error with completing the order. {ex}");
+                return View("CustomError");
+            }
 
             return RedirectToAction("Index");
         }

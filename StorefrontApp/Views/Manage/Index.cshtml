@@ -117,7 +117,7 @@
         <strong>Payment Method Note:</strong>
         <ul>
             <li>The payment method is exclusively issued by the companion website, Slushbanking, no other ones will work.</li>
-            <li>The Key ID is a 5-digit non-negative, non-decimal number.</li>
+            <li>The Key ID is a 5-digit non-negative, non-decimal number with no leading zeroes (example: 12345, not 00001).</li>
         </ul>
         @using (Html.BeginForm("AddPaymentMethod", "Manage", FormMethod.Post, new { role = "form" }))
         {
@@ -126,14 +126,15 @@
             <div class="row">
                 @Html.LabelFor(m => m.CardNumber, new { @class = "col-md-2 col-form-label" })
                 <div class="col-md-10">
-                    @Html.TextBoxFor(m => m.CardNumber, new { @class = "form-control" })
+                    @Html.TextBoxFor(m => m.CardNumber, new { @class = "form-control", required = "required", maxLength = "11" })
                 </div>
             </div>
             <br />
             <div class="row">
                 @Html.LabelFor(m => m.KeyID, new { @class = "col-md-2 col-form-label" })
                 <div class="col-md-10">
-                    @Html.TextBoxFor(m => m.KeyID, new { @class = "form-control" })
+                    @Html.TextBoxFor(m => m.KeyID, new { @class = "form-control", required = "required", maxLength = 5 })
+                    @Html.ValidationMessageFor(model => model.KeyID)
                 </div>
             </div>
             <br />
@@ -192,93 +193,121 @@
                     &emsp;@Model.AliasName
                 </p>
             </details>
+            <br />
+            using (Html.BeginForm("SetAccountAlias", "Manage", FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary("", new { @class = "text-danger" })
+                <div class="row">
+                    @Html.LabelFor(m => m.ChangeAliasInput, new { @class = "col-md-1 col-form-label" })
+                    <div class="col-md-10">
+                        @Html.TextBoxFor(m => m.ChangeAliasInput, new { @class = "form-control", required = "required" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="offset-md-1 col-md-10">
+                        <input type="submit" value="Change Alias" class="btn btn-outline-primary" />
+                    </div>
+                </div>
+                <br />
+            }
             <br /><br />
             <h5>Current Shopping Cart:</h5>
             if (Model.ShoppingCartItems != null && Model.ShoppingCartItems.Count > 0)
             {
-                <div class="accordion accordian-flush">
-                    @foreach (var item in Model.ShoppingCartItems)
+                <div class="overflow-auto" style="max-height: 500px; border: 1px solid #ddd; padding: 15px;">
+                    <div class="accordion accordian-flush">
+                        @foreach (var item in Model.ShoppingCartItems)
+                        {
+                            var productId = item.Product.ProductID;
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading_@productId">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@productId" aria-expanded="false" aria-controls="collapse_@productId">
+                                        @item.Product.ProductName
+                                    </button>
+                                </h2>
+                                <div class="accordion-collapse collapse" id="collapse_@productId" data-bs-parent="#shoppingCartAccordion">
+                                    <div class="accordion-body">
+                                        Type: @item.Product.ProductType
+                                        <br />
+                                        Price: @item.Product.Price, Quantity: @item.Quantity
+                                        <br />
+                                        Description: @item.Product.ProductDescription
+                                        <br />
+                                        Supplier: @item.Product.Supplier.SupplierName
+                                        <br />
+                                        @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = item.ShoppingCartID, returnControllerPath = "Manage" }, FormMethod.Post))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger">Remove</button>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        <div class="accordion-body">
+                            <h5>Proceed To Checkout:</h5>
+                            @Html.ActionLink("Checkout", "CreateOrder", "Manage", null, new { @class = "btn btn-outline-primary" })
+                        </div>
+                    </div>
+                    <hr />
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-primary" role="alert">
+                    No shopping cart items available.
+                </div>
+            }
+            <br /><br />
+            if (Model.Orders != null && Model.Orders.Count > 0)
+            {
+                <h5>Orders:</h5>
+                <div class="overflow-auto" style="max-height: 550px; border: 1px solid #ddd; padding: 8px;">
+                    @foreach (var order in Model.Orders)
                     {
-                        var productId = item.Product.ProductID;
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading_@productId">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@productId" aria-expanded="false" aria-controls="collapse_@productId">
-                                    @item.Product.ProductName
-                                </button>
-                            </h2>
-                            <div class="accordion-collapse collapse" id="collapse_@productId" data-bs-parent="#shoppingCartAccordion">
-                                <div class="accordion-body">
-                                    Type: @item.Product.ProductType
-                                    <br />
-                                    Price: @item.Product.Price, Quantity: @item.Quantity
-                                    <br />
-                                    Description: @item.Product.ProductDescription
-                                    <br />
-                                    Supplier: @item.Product.Supplier.SupplierName
-                                    <br />
-                                    @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = item.ShoppingCartID, returnControllerPath = "Manage" }, FormMethod.Post))
+                        <div class="card" style="width:auto">
+                            <div class="card-header">
+                                Order ID: @order.OrderID
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    @foreach (var item in order.OrderItems)
+                                    {
+                                        <div class="col-auto">
+                                            <div class="card w-100">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">@item.Product.ProductName</h5>
+                                                    <h6 class="card-subtitle mb-2 text-muted">@item.Product.ProductType</h6>
+                                                    <hr />
+                                                    <p class="card-text">
+                                                        <strong>Price:</strong> @item.Product.Price &emsp;<strong>Quantity:</strong> @item.Quantity<br />
+                                                        <strong>Description:</strong> @item.Product.ProductDescription<br />
+                                                        <strong>Supplier:</strong> @item.Product.Supplier.SupplierName
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="mt-3">
+                                    <h6>Total Order Price: @order.TotalPrice, Status: @order.Status</h6>
+                                    @using (Html.BeginForm("RefundOrder", "Manage", new { orderID = order.OrderID }, FormMethod.Post))
                                     {
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-outline-danger">Remove</button>
+                                        <button type="submit" class="btn btn-outline-primary">Refund</button>
                                     }
                                 </div>
                             </div>
                         </div>
                     }
-                    <div class="accordion-body">
-                        <h5>Proceed To Checkout:</h5>
-                        @Html.ActionLink("Checkout", "CreateOrder", "Manage", null, new { @class = "btn btn-outline-primary" })
-                    </div>
-                </div>
-                <hr />
-            }
-            <br /><br />
-            if (Model.Orders != null && Model.Orders.Count > 0)
-            {
-
-                foreach (var order in Model.Orders)
-                {
-                    <div class="accordian-flush">
-                        @foreach (var item in order.OrderItems)
-                        {
-                            var orderItemID = item.Product.ProductID;
-                            <h2 class="accordion-header" id="heading_@orderItemID">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_@orderItemID" aria-expanded="false" aria-controls="collapse_@orderItemID">
-                                    @item.Product.ProductName
-                                </button>
-                            </h2>
-                            <div class="accordion-collapse collapse" id="collapse_@orderItemID" data-bs-parent="#ordersAccordion">
-                                <div class="accordion-body">
-                                    Type: @item.Product.ProductType
-                                    <br />
-                                    Price: @item.Product.Price, Quantity: @item.Quantity, Total: @(item.Product.Price * item.Quantity)
-                                    <br />
-                                    Description: @item.Product.ProductDescription
-                                    <br />
-                                    Supplier: @item.Product.Supplier.SupplierName
-                                </div>
-                            </div>
-                        }
-                        <div class="accordion-body">
-                            <h2>Total Order Price: @order.TotalPrice, Status: @order.Status</h2>
-                            <br />
-                            @using (Html.BeginForm("RefundOrder", "Manage", new { orderID = order.OrderID }, FormMethod.Post))
-                            {
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-outline-primary">Refund</button>
-                            }
-                        </div>
-                    </div>
-                    <br />
-                }
-                <hr />
+                </div><br />
             }
             else
             {
                 <div class="alert alert-primary">
                     No shop orders were made.
-                </div>
-                <br />
+                </div><br />
             }
         }
         else

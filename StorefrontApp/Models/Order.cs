@@ -17,23 +17,32 @@ namespace StorefrontApp.Models
         [Required]
         public int PaymentMethodID { get; set; }
         [Required]
-        public float TotalPrice { get; set; }
+        public decimal TotalPrice { get; set; }
         [DisplayFormat(ConvertEmptyStringToNull = false)]
         [Required(AllowEmptyStrings = true)]
         public string ShippingAddress { get; set; }
         [Required]
-        public string Certificate {  get; set; }
+        public List<Certificate> CertificatePairs { get; set; }
         [Required]
         public OrderStatus Status { get; set; }
         [Required]
         public DateTime PurchaseDate { get; set; }
-        
+
         [ForeignKey("BuyerID")]
         public virtual StoreAccount StoreAccount { get; set; }
         [ForeignKey("PaymentMethodID")]
         public PaymentMethod PaymentMethod { get; set; }
 
         public virtual ICollection<OrderItem> OrderItems { get; set; }
+    }
+
+    public class Certificate
+    {
+        [Key]
+        public int CertificateID { get; set; }
+        public string CertificateValue { get; set; }
+        public string VendorAlias { get; set; }
+        public string CustomerAlias { get; set; }
     }
 
     public enum OrderStatus

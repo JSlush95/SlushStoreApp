@@ -12,7 +12,7 @@ namespace StorefrontApp.Models
     public class HomeViewModel
     {
         public IPagedList<Product> Products { get; set; }
-        public HashSet<ShoppingCart> ShoppingCart { get; set; }
+        public List<ShoppingCartItem> ShoppingCartItems { get; set; }
         [Display(Name = "Types")]
         public List<CheckBoxItem> ProductTypeOptions { get; set; }
         public string SelectedProductTypes {  get; set; }

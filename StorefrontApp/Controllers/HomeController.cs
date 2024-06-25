@@ -226,7 +226,7 @@ namespace StorefrontApp.Controllers
             var shoppingCart = _dbContext.ShoppingCarts
                 .Include(sc => sc.ShoppingCartItems) // Eagerly loading for the navigation propety of the collection of ShoppingCartItems.
                 .Where(sc => sc.Account.HolderID == userId)
-                .ToHashSet();
+                .FirstOrDefault();
 
             IQueryable<Product> sortedProducts;
 
@@ -275,7 +275,7 @@ namespace StorefrontApp.Controllers
             var viewModel = new HomeViewModel
             {
                 Products = paginatedProducts,
-                ShoppingCart = shoppingCart,
+                ShoppingCartItems = shoppingCart.ShoppingCartItems.ToList(),
                 SortOptions = (Sort)sortOptions,
                 SearchInput = searchInput,
                 ProductTypeOptions = productsTypeList,
