@@ -35,7 +35,7 @@
                         <li class="card-text">If the email provided does not work, change it above.</li>
                         @*<li class="card-text">Unconfirmed accounts can not use the storefront system.</li>*@
                     </ul>
-                    @Html.ActionLink("Resend Confirmation Email", "ResendConfirmationEmail", "Account", null, new { @class = "btn btn-outline-primary" })
+                    @Html.ActionLink("Resend Confirmation Email", "ResendConfirmationEmail", "Account", null, new { @class = "btn btn-outline-dark" })
                 </div>
             </div>
 
@@ -140,7 +140,7 @@
             <br />
             <div class="row">
                 <div class="offset-md-2 col-md-10">
-                    <input type="submit" value="Add Payment Method" class="btn btn-outline-primary" />
+                    <input type="submit" value="Add Payment Method" class="btn btn-outline-dark" />
                 </div>
             </div>
         }
@@ -150,7 +150,7 @@
             <hr />
             <table class="table table-striped table-hover">
                 <thead>
-                    <tr class="table-dark">
+                    <tr class="table">
                         <th scope="col">Card Number</th>
                         <th scope="col">Key ID</th>
                         <th scope="col">Remove Method</th>
@@ -166,7 +166,7 @@
                                 @using (Html.BeginForm("RemovePaymentMethod", "Manage", new { paymentMethodID = paymentMethod.PaymentMethodID }, FormMethod.Post))
                                 {
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-outline-primary">Remove</button>
+                                    <button type="submit" class="btn btn-outline-dark">Remove</button>
                                 }
                             </td>
                         </tr>
@@ -206,13 +206,13 @@
                 </div>
                 <div class="row">
                     <div class="offset-md-1 col-md-10">
-                        <input type="submit" value="Change Alias" class="btn btn-outline-primary" />
+                        <input type="submit" value="Change Alias" class="btn btn-outline-dark" />
                     </div>
                 </div>
                 <br />
             }
             <br /><br />
-            <h5>Current Shopping Cart:</h5>
+            <h3>Current Shopping Cart:</h3>
             if (Model.ShoppingCartItems != null && Model.ShoppingCartItems.Count > 0)
             {
                 <div class="overflow-auto" style="max-height: 500px; border: 1px solid #ddd; padding: 15px;">
@@ -239,7 +239,7 @@
                                         @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = item.ShoppingCartID, returnControllerPath = "Manage" }, FormMethod.Post))
                                         {
                                             @Html.AntiForgeryToken()
-                                            <button type="submit" class="btn btn-outline-danger">Remove</button>
+                                            <button type="submit" class="btn btn-outline-dark">Remove</button>
                                         }
                                     </div>
                                 </div>
@@ -247,7 +247,7 @@
                         }
                         <div class="accordion-body">
                             <h5>Proceed To Checkout:</h5>
-                            @Html.ActionLink("Checkout", "CreateOrder", "Manage", null, new { @class = "btn btn-outline-primary" })
+                            @Html.ActionLink("Checkout", "CreateOrder", "Manage", null, new { @class = "btn btn-outline-dark" })
                         </div>
                     </div>
                     <hr />
@@ -262,7 +262,7 @@
             <br /><br />
             if (Model.Orders != null && Model.Orders.Count > 0)
             {
-                <h5>Orders:</h5>
+                <h3>Current Orders:</h3>
                 <div class="overflow-auto" style="max-height: 550px; border: 1px solid #ddd; padding: 8px;">
                     @foreach (var order in Model.Orders)
                     {
@@ -295,11 +295,13 @@
                                     @using (Html.BeginForm("RefundOrder", "Manage", new { orderID = order.OrderID }, FormMethod.Post))
                                     {
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-outline-primary">Refund</button>
+                                        <button type="submit" class="btn btn-outline-dark">Refund</button>
                                     }
                                 </div>
                             </div>
+                            <br />
                         </div>
+                        <br />
                     }
                 </div><br />
             }
@@ -346,7 +348,7 @@
                 <br />
                 <div class="row">
                     <div class="offset-md-2 col-md-10">
-                        <input type="submit" value="Create Store Account" class="btn btn-outline-primary" />
+                        <input type="submit" value="Create Store Account" class="btn btn-outline-dark" />
                     </div>
                 </div>
                 <br />

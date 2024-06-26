@@ -275,16 +275,21 @@ namespace StorefrontApp.Controllers
             var viewModel = new HomeViewModel
             {
                 Products = paginatedProducts,
-                ShoppingCartItems = shoppingCart.ShoppingCartItems.ToList(),
                 SortOptions = (Sort)sortOptions,
                 SearchInput = searchInput,
                 ProductTypeOptions = productsTypeList,
                 SuppliersList = suppliersList,
                 SelectedProductTypes = selectedTypes,
                 SelectedSuppliers = selectedSuppliers,
-                LoggedIn = User.Identity.IsAuthenticated,
                 StoreAccountCreated = storeAccountCreated
             };
+
+            // Null handling, the home view can be seen without being logged in (viewing products), which means these two fields can be null.
+            if (User.Identity.IsAuthenticated)
+            {
+                viewModel.LoggedIn = User.Identity.IsAuthenticated;
+                viewModel.ShoppingCartItems = shoppingCart.ShoppingCartItems.ToList();
+            }
 
             return View(viewModel);
         }

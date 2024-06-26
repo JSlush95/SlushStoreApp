@@ -1,5 +1,43 @@
-﻿.pagination-container{
-    
+﻿body {
+    background: url(/images/triangles-bg-1.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+html {
+    height: auto;
+}
+
+.overflow-auto {
+    background-color: blanchedalmond;
+}
+
+.list-group-item {
+    background-color: tan;
+    transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.card {
+    background-color: tan;
+}
+
+.card-body {
+    background-color: bisque;
+}
+
+#product-header {
+    background-color: burlywood;
+    padding: 15px;
+    border-radius: 5px;
+    color: #8b4513;
+}
+
+.card-title{
+    justify-items:center;
+}
+
+.card-header {
+    background-color: burlywood;
 }
 
 .pagination {
@@ -15,29 +53,87 @@
 .pagination a {
     display: block;
     padding: 10px 15px;
-    border: 1px solid #ddd;
+    border: 1px solid #d2b48c;
     border-radius: 4px;
     text-decoration: none;
-    color: #007bff;
-    background-color: #f8f9fa;
+    color: #8b4513;
+    background-color: #f5deb3;
     transition: background-color 0.3s ease;
 }
 
 .pagination a:hover {
-    background-color: #e2e6ea;
-    border-color: #dae0e5;
-    color: #0056b3;
+    background-color: #deb887;
+    border-color: #cda15e;
+    color: #5a2d0c;
 }
 
 .pagination .active a {
     color: #fff;
-    background-color: #007bff;
-    border-color: #007bff;
+    background-color: #cd853f;
+    border-color: #cd853f;
 }
 
 .pagination .disabled a {
-    color: #6c757d;
+    color: #d3d3d3;
     pointer-events: none;
+    background-color: #f5f5f5;
+    border-color: #d2b48c;
+}
+
+.form-check-input {
+    background-color: #f5deb3;
+    border: 1px solid #d2b48c;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.form-check-input:checked {
+    background-color: #cd853f;
+    border-color: #cd853f;
+}
+
+.form-check-input:focus {
+    border-color: #deb887;
+}
+
+.form-control {
+    color: #8b4513;
+    background-color: #f5deb3;
+    border: 1px solid #d2b48c;
+    border-radius: 0.25rem;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-control:focus {
+    color: #5a2d0c;
     background-color: #fff;
-    border-color: #ddd;
+    border-color: #deb887;
+}
+
+.text-danger.validation-summary-errors li, #Password-error, #Username-error {
+    color: #ffd800;
+}
+
+.btn {
+    color: #fff;
+    cursor: pointer;
+    background-color: #cd853f;
+    border: 1px solid #a0522d;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #a0522d;
+    border-color: #8b4513;
+}
+
+.btn:focus, .btn:active {
+    background-color: #8b4513;
+    border-color: #5a2d0c;
+}
+
+.alert {
+    border: 1px solid transparent;
+    color: #8b4513;
+    background-color: #f5deb3;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }

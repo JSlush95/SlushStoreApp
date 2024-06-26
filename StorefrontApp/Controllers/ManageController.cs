@@ -405,25 +405,25 @@ namespace StorefrontApp.Controllers
                 {
                     var response = await client.GetAsync($"api/InitiateTransaction?encryptedCardNumber={Uri.EscapeDataString(encryptedCardNumber)}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}&vendorAccountAlias={Uri.EscapeDataString(vendor.VendorAlias)}&paymentAmount={vendor.TotalAmount}");
 
+                    string content = await response.Content.ReadAsStringAsync();
+
+                    if (content.Contains("Not enough funds to complete the purchase."))
+                    {
+                        ViewBag.Message = $"Not enough money to complete the transaction.";
+                        return View(model);
+                    }
+
                     if (!response.IsSuccessStatusCode)
                     {
                         Log.Warn($"Card validation failed for vendor {vendor.VendorAlias}.");
-                        TempData["Message"] = $"Card validation failed.";
+                        ViewBag.Message = $"Card validation failed.";
                         return View(model);
                     }
 
                     if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
                     {
                         Log.Warn($"The server failed to validate the payment information for vendor {vendor.VendorAlias}.");
-                        TempData["Message"] = $"The server failed to validate the payment information.";
-                        return View(model);
-                    }
-
-                    string content = await response.Content.ReadAsStringAsync();
-
-                    if (content.Contains("Not enough funds for this transaction of purchase"))
-                    {
-                        TempData["Message"] = $"Not enough money to complete this transaction.";
+                        ViewBag.Message = $"The server failed to validate the payment information.";
                         return View(model);
                     }
 
