@@ -227,6 +227,7 @@ namespace StorefrontApp.Controllers
                 .Include(sc => sc.ShoppingCartItems) // Eagerly loading for the navigation propety of the collection of ShoppingCartItems.
                 .Where(sc => sc.Account.HolderID == userId)
                 .FirstOrDefault();
+            var shoppingCartItems = shoppingCart?.ShoppingCartItems;
 
             IQueryable<Product> sortedProducts;
 
@@ -288,7 +289,11 @@ namespace StorefrontApp.Controllers
             if (User.Identity.IsAuthenticated)
             {
                 viewModel.LoggedIn = User.Identity.IsAuthenticated;
-                viewModel.ShoppingCartItems = shoppingCart.ShoppingCartItems.ToList();
+
+                if (shoppingCartItems != null && shoppingCartItems.Any())
+                {
+                    viewModel.ShoppingCartItems = shoppingCartItems.ToList();
+                }
             }
 
             return View(viewModel);

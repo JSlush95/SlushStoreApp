@@ -80,6 +80,30 @@ namespace StorefrontApp.Controllers
             return User.Identity.GetUserId<int>();
         }
 
+        public class TransactionRequest
+        {
+            public string EncryptedCardNumber { get; set; }
+            public string EncryptedKeyPIN { get; set; }
+            public List<VendorTransaction> VendorTransactions { get; set; }
+        }
+
+        public class VendorTransaction
+        {
+            public string VendorAlias { get; set; }
+            public decimal TotalAmount { get; set; }
+        }
+
+        public class TransactionResponse
+        {
+            public List<string> Certificates { get; set; }
+        }
+
+        public class RefundRequest
+        {
+            public List<string> Certificates { get; set; }
+            public List<decimal> Amounts { get; set; }
+        }
+
         //
         // GET: /Manage/Index
         public async Task<ActionResult> Index(ManageMessageId? message)
@@ -214,7 +238,7 @@ namespace StorefrontApp.Controllers
         // POST: /Manage/AddPaymentMethod
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> AddPaymentMethod(string cardNumber, int? keyID)
+        public async Task<ActionResult> AddPaymentMethod(string cardNumber, string keyPIN)
         {
             var userId = GetCurrentUserId();
 
@@ -225,10 +249,10 @@ namespace StorefrontApp.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Manual validation for KeyID.
-            if (keyID == null || (keyID < 10000 || keyID > 99999))
+            // Manual validation for KeyPIN.
+            if (string.IsNullOrWhiteSpace(keyPIN))
             {
-                TempData["Message"] = "The Key ID field is required and must be between 10000 and 99999 (5 digits).";
+                TempData["Message"] = "The Key ID field is required and must be 5 digits.";
                 return RedirectToAction("Index");
             }
 
@@ -236,12 +260,12 @@ namespace StorefrontApp.Controllers
             {
                 AccountID = userId,
                 CardNumber = cardNumber,
-                KeyID = (int)keyID
+                KeyPIN = keyPIN
             };
 
             // Duplication check.
             var existingPaymentMethodForSameUser = await _dbContext.PaymentMethods
-                .Where(pm => (pm.CardNumber == cardNumber && pm.KeyID == keyID) && pm.Account.HolderID == userId)
+                .Where(pm => (pm.CardNumber == cardNumber && pm.KeyPIN == keyPIN) && pm.Account.HolderID == userId)
                 .FirstOrDefaultAsync();
 
             if (existingPaymentMethodForSameUser != null)
@@ -250,15 +274,15 @@ namespace StorefrontApp.Controllers
                 return RedirectToAction("Index");
             }
 
-            // Encrypting the KeyID.
-            var encryptedKeyID = _cryptography.EncryptValue(keyID.ToString());
+            // Encrypting the KeyPIN.
+            var encryptedKeyPIN = _cryptography.EncryptValue(keyPIN);
             var encryptedCardNumber = _cryptography.EncryptValue(cardNumber);
 
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/"); // Bank app's URL
-                var response = await client.GetAsync($"api/VerifyCard?encryptedCardNumber={Uri.EscapeDataString(encryptedCardNumber)}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}");
+                var response = await client.GetAsync($"api/VerifyCard?encryptedCardNumber={Uri.EscapeDataString(encryptedCardNumber)}&encryptedKeyPIN={Uri.EscapeDataString(encryptedKeyPIN)}");
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -359,30 +383,30 @@ namespace StorefrontApp.Controllers
                 .Where(pm => pm.PaymentMethodID == model.SelectedPaymentMethodID)
                 .FirstOrDefault();
 
-            var encryptedKeyID = _cryptography.EncryptValue(paymentMethod.KeyID.ToString());
+            var encryptedKeyPIN = _cryptography.EncryptValue(paymentMethod.KeyPIN.ToString());
             var encryptedCardNumber = _cryptography.EncryptValue(paymentMethod.CardNumber);
 
-            decimal totalPrice = 0;
+            decimal totalOrderPrice = 0;
             List<OrderItem> items = new List<OrderItem>();
 
             Order order = new Order
             {
                 BuyerID = userId,
                 PaymentMethodID = model.SelectedPaymentMethodID,
-                CertificatePairs = new List<Certificate>(),
                 ShippingAddress = model.ShippingAddress,
                 OrderItems = new List<OrderItem>()
             };
 
             foreach (var item in userCart.ShoppingCartItems)
             {
-                totalPrice += item.Product.Price * item.Quantity;
+                decimal currentOrderPrice = item.Product.Price * item.Quantity;
+                totalOrderPrice += currentOrderPrice;
 
                 OrderItem orderItem = new OrderItem
                 {
-                    OrderID = order.OrderID,
                     ProductID = item.Product.ProductID,
-                    Quantity = item.Quantity
+                    Quantity = item.Quantity,
+                    TotalPrice = currentOrderPrice
                 };
 
                 items.Add(orderItem);
@@ -395,56 +419,49 @@ namespace StorefrontApp.Controllers
                 {
                     VendorAlias = group.Key,
                     TotalAmount = group.Sum(item => item.Product.Price * item.Quantity)
-                });
+                }).ToList();
+
+            var transactionRequest = new TransactionRequest
+            {
+                EncryptedCardNumber = encryptedCardNumber,
+                EncryptedKeyPIN = encryptedKeyPIN,
+                VendorTransactions = vendorGroups.Select(vg => new VendorTransaction
+                {
+                    VendorAlias = _cryptography.EncryptValue(vg.VendorAlias),
+                    TotalAmount = vg.TotalAmount
+                }).ToList()
+            };
 
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/");
-                foreach (var vendor in vendorGroups)
+                var jsonContent = JsonConvert.SerializeObject(transactionRequest);
+                var contentString = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("api/InitiateTransaction", contentString);
+
+                if (!response.IsSuccessStatusCode)
                 {
-                    var response = await client.GetAsync($"api/InitiateTransaction?encryptedCardNumber={Uri.EscapeDataString(encryptedCardNumber)}&encryptedKeyID={Uri.EscapeDataString(encryptedKeyID)}&vendorAccountAlias={Uri.EscapeDataString(vendor.VendorAlias)}&paymentAmount={vendor.TotalAmount}");
-
-                    string content = await response.Content.ReadAsStringAsync();
-
+                    var content = await response.Content.ReadAsStringAsync();
                     if (content.Contains("Not enough funds to complete the purchase."))
                     {
-                        ViewBag.Message = $"Not enough money to complete the transaction.";
+                        ViewBag.Message = "Not enough money to complete the transaction.";
                         return View(model);
                     }
 
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        Log.Warn($"Card validation failed for vendor {vendor.VendorAlias}.");
-                        ViewBag.Message = $"Card validation failed.";
-                        return View(model);
-                    }
+                    ViewBag.Message = "Card validation failed or there was a server error.";
+                    return View(model);
+                }
 
-                    if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
-                    {
-                        Log.Warn($"The server failed to validate the payment information for vendor {vendor.VendorAlias}.");
-                        ViewBag.Message = $"The server failed to validate the payment information.";
-                        return View(model);
-                    }
-
-                    string certificate = content.Substring(content.IndexOf("Certificate:") + 12).Trim();
-                    var customerAlias = await _dbContext.StoreAccounts
-                        .Where(sa => sa.HolderID == userId)
-                        .Select(sa => sa.Alias)
-                        .FirstOrDefaultAsync();
-
-                    Certificate certificateItem = new Certificate
-                    {
-                        CertificateValue = certificate,
-                        VendorAlias = vendor.VendorAlias,
-                        CustomerAlias = customerAlias
-                    };
-
-                    order.CertificatePairs.Add(certificateItem);
+                var responseContent = await response.Content.ReadAsAsync<TransactionResponse>();
+                for (int i = 0; i < items.Count; i++)
+                {
+                    items[i].Certificate = responseContent.Certificates[i];
                 }
             }
+
             order.OrderItems = items;
-            order.TotalPrice = totalPrice;
+            order.TotalPrice = totalOrderPrice;
             order.PurchaseDate = DateTime.Now;
             order.Status = OrderStatus.Approved;
 
@@ -453,7 +470,8 @@ namespace StorefrontApp.Controllers
                 _dbContext.Orders.Add(order);
                 _dbContext.ShoppingCartsItems.RemoveRange(userCart.ShoppingCartItems);
                 await _dbContext.SaveChangesAsync();
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 ViewBag.ErrorMessage = "Internal error with completing the order.";
                 Log.Warn($"Error with completing the order. {ex}");
@@ -468,9 +486,14 @@ namespace StorefrontApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> RefundOrder(int orderID)
         {
-            var refunderAlias = await _dbContext.Orders
+            var userId = GetCurrentUserId();
+            var order = await _dbContext.Orders
                 .Where(o => o.OrderID == orderID)
-                .Select(o => o.StoreAccount.Alias)
+                .FirstOrDefaultAsync();
+            var orderItems = order.OrderItems;
+            var customerAlias = await _dbContext.StoreAccounts
+                .Where(sa => sa.HolderID == userId)
+                .Select(sa => sa.Alias)
                 .FirstOrDefaultAsync();
 
             if (!ModelState.IsValid)
@@ -479,7 +502,43 @@ namespace StorefrontApp.Controllers
                 return RedirectToAction("Index");
             }
 
-            // ...
+            // Serializing the request for the payload.
+            var refundRequest = new RefundRequest
+            {
+                Certificates = orderItems.Select(oi => oi.Certificate).ToList(),
+                Amounts = orderItems.Select(oi => oi.TotalPrice).ToList()
+            };
+
+            // Calling the Bank API.
+            using (var client = new HttpClient())
+            {
+                client.BaseAddress = new Uri("https://localhost:44321/");
+                var jsonContent = JsonConvert.SerializeObject(refundRequest);
+                var contentString = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync("api/InitiateRefund", contentString);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Log.Warn($"Refund unsuccessful for order {orderID} from {customerAlias}.");
+                    ViewBag.Message = $"Failed to refund this order.";
+                    return RedirectToAction("Index");
+                }
+
+                Log.Warn($"Refund success for order {orderID} from {customerAlias}.");
+                ViewBag.Message = $"Successfully completed the refund.";
+                order.Status = OrderStatus.Refunded;
+
+                try
+                {
+                    _dbContext.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.ErrorMessage = "Internal error with completing the refund.";
+                    Log.Warn($"Error with refunding the order. {ex}");
+                    return View("CustomError");
+                }
+            }
 
             return RedirectToAction("Index");
         }

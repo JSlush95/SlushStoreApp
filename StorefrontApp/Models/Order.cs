@@ -18,11 +18,8 @@ namespace StorefrontApp.Models
         public int PaymentMethodID { get; set; }
         [Required]
         public decimal TotalPrice { get; set; }
-        [DisplayFormat(ConvertEmptyStringToNull = false)]
-        [Required(AllowEmptyStrings = true)]
-        public string ShippingAddress { get; set; }
         [Required]
-        public List<Certificate> CertificatePairs { get; set; }
+        public string ShippingAddress { get; set; }
         [Required]
         public OrderStatus Status { get; set; }
         [Required]
@@ -34,15 +31,6 @@ namespace StorefrontApp.Models
         public PaymentMethod PaymentMethod { get; set; }
 
         public virtual ICollection<OrderItem> OrderItems { get; set; }
-    }
-
-    public class Certificate
-    {
-        [Key]
-        public int CertificateID { get; set; }
-        public string CertificateValue { get; set; }
-        public string VendorAlias { get; set; }
-        public string CustomerAlias { get; set; }
     }
 
     public enum OrderStatus

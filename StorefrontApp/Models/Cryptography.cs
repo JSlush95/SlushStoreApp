@@ -23,8 +23,8 @@ namespace StorefrontApp.Models
             {
                 rsa.FromXmlString(_publicKey);
 
-                var keyIDBytes = Encoding.UTF8.GetBytes(value);
-                var encryptedBytesID = rsa.Encrypt(keyIDBytes, RSAEncryptionPadding.Pkcs1);
+                var itemAsBytes = Encoding.UTF8.GetBytes(value);
+                var encryptedBytesID = rsa.Encrypt(itemAsBytes, RSAEncryptionPadding.Pkcs1);
 
                 return Convert.ToBase64String(encryptedBytesID);
             }

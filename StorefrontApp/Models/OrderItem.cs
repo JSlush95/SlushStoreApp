@@ -17,6 +17,10 @@ namespace StorefrontApp.Models
         [Required]
         public int ProductID { get; set; }
         [Required]
+        public string Certificate { get; set; }
+        [Required] 
+        public decimal TotalPrice { get; set; }
+        [Required]
         public int Quantity { get; set; }
 
         [ForeignKey("OrderID")]

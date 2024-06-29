@@ -25,8 +25,8 @@ namespace StorefrontApp.Models
         public string CardNumber { get; set; }
         [Required]
         [Display(Name = "Key ID")]
-        [Range(10000, 99999)]
-        public int KeyID { get; set; }
+        [StringLength(5)]
+        public string KeyPIN { get; set; }
         [Required]
         [Display(Name = "Account Type")]
         public AccountType AccountTypeInput { get; set; }
