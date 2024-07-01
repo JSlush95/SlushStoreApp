@@ -78,13 +78,18 @@
         @if (Model.StoreAccountCreated)
         {
             <br />
+            <div class="alias-note">
+                <strong>Alias Note</strong>
+                <ul>
+                    <li>An account alias is used to connect to the companion banking website. It must match the companion website's alias.</li>
+                </ul>
+            </div>
             <details>
                 <p class="lead">
                     <summary><strong>Account Alias:</strong></summary>
                     &emsp;@Model.AliasName
                 </p>
             </details>
-            <br />
             using (Html.BeginForm("SetAccountAlias", "Manage", FormMethod.Post, new { role = "form" }))
             {
                 @Html.AntiForgeryToken()

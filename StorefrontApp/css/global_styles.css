@@ -129,18 +129,18 @@ a:hover {
     transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
-/* The "spoiler" tag for the account alias. */
-details {
+/* Payment Method Note and alias area for user guidance details. */
+.payment-method-note-section, .alias-note {
     background-color: #ffe4c4;
-    border: 1px solid #d2b48c;
+    border: 5px solid #d2b48c;
     padding: 10px;
     margin-bottom: 10px;
 }
 
-/* Payment Method Note area for details about payment method adding */
-.payment-method-note-section {
+/* The "spoiler" tag for the account alias. */
+details {
     background-color: #ffe4c4;
-    border: 5px solid #d2b48c;
+    border: 1px solid #d2b48c;
     padding: 10px;
     margin-bottom: 10px;
 }
