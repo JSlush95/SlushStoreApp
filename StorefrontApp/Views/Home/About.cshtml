@@ -8,28 +8,50 @@
 
 <main>
     <section class="row" aria-labelledby="aspnetTitle">
-        <h1 id="title">Slush Banking</h1>
-        <p class="lead">This website is a mockup (fake) website that uses my other fake banking website to simulate a storefront.. It uses C#, ASP.Net Identity with Razor HTML and Bootstrap.</p>
+        <h1 id="title">The Slush Storefront</h1>
+        <p class="lead">
+            This website is a mockup (fake) program that emulates a virtual storefront. It uses C#, ASP.Net Identity with Razor HTML and Bootstrap.<br />
+            As proof that I can make something more than just a simple program, I aimed to create a two-tiered system with real world applications. It is done with a combination of banking and storefront websites.
+        </p>
     </section>
-    <br />
+    <br /><br />
     <div class="row">
-        <section class="col-md-4" aria-labelledby="gettingStartedTitle">
+        <section class="col-auto" aria-labelledby="gettingStartedTitle">
             <h2 id="gettingStartedTitle">Getting started</h2>
             <p>
-                The sus, amogus.
+                Please enjoy, this system may be a bit flawed, as I am still new to this. This will act as the store where funds are spent, using your banking information from the companion bank website.
             </p>
+            <br />
+            <strong>This fake storefront website does:</strong>
+            <ul>
+                <li>Search, filter and browse the list of products available by various fake suppliers.</li>
+                <li>Management of data, on a user-level (password, alias, name, email) and store account-level (payment methods, shopping cart, orders, etc).</li>
+                <li>Interact with the companion banking website to use your fake payment information from the fake banking website to "buy" these products here.</li>
+                <li>2 Factor Authenticaton (email), Remember Me, email confirmation, etc.</li>
+            </ul>
         </section>
     </div>
     <br /><br />
+    <header>
+        <h2>@ViewBag.Title</h2>
+    </header>
+
     <section class="about-section">
-        <p>I am a graduate from Arizona State University under the IRA Fulton Schools of Engineering. I decided to make a banking website to showcase the skills I have learned.</p>
+        <p>
+            I am a graduate from Arizona State University under the IRA Fulton Schools of Engineering. I decided to make a banking website to showcase the skills I have learned.<br />
+            This is a companion website to my other one, the storefront website.
+        </p>
     </section>
-    <br />
+    <br /><br />
     <section class="contact-section">
-        <h2>Contact Information</h2>
+        <h3>Contact Information</h3>
+        <div>
+            <p class="lead">If anything goes wrong, feel free to contact me.</p>
+        </div>
         <address>
             <strong>Email Address:</strong> <a href="mailto:JSlush95@gmail.com">JSlush95@gmail.com</a>
         </address>
     </section>
+    <br />
 </main>
 

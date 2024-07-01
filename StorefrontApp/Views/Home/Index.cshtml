@@ -14,12 +14,13 @@
             @if (Model.ProductTypeOptions != null && Model.ProductTypeOptions.Any())
             {
                 <div class="col-md-2">
-                    @using (Html.BeginForm("Index", "Home", FormMethod.Post))
+                    @using (Html.BeginForm("QueryStringDelegate", "Home", FormMethod.Post))
                     {
                         @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.CurrentPage)
                         <div class="row">
                             @Html.LabelFor(m => m.SearchInput, new { @style = "text-decoration:underline" })
-                            @Html.TextBoxFor(m => m.SearchInput, new { @class = "form-control", @Value=Model.SearchInput})
+                            @Html.TextBoxFor(m => m.SearchInput, new { @class = "form-control", @Value = Model.SearchInput })
                         </div>
                         <br />
                         <div class="row">
@@ -28,11 +29,11 @@
                         </div>
                         <br />
                         <div class="form-check-types">
-                            @Html.LabelFor(m => m.ProductTypeOptions, new { @style="text-decoration:underline" })
+                            @Html.LabelFor(m => m.ProductTypeOptions, new { @style = "text-decoration:underline" })
                             <br>
                             @for (int i = 0; i < Model.ProductTypeOptions.Count; i++)
                             {
-                                @Html.Label("", Model.ProductTypeOptions[i].NameOrType, new { @class = "form-check-label"});
+                                @Html.Label("", Model.ProductTypeOptions[i].NameOrType, new { @class = "form-check-label" });
                                 @Html.Raw("&nbsp")
                                 @Html.HiddenFor(m => m.ProductTypeOptions[i].NameOrType)
                                 @Html.CheckBoxFor(m => m.ProductTypeOptions[i].Checked, new { @class = "form-check-input", id = "productType_" + i })
@@ -41,14 +42,14 @@
                             <br />
                         </div>
                         <div class="form-check-suppliers">
-                            @Html.LabelFor(m => m.SuppliersList, new { @style= "text-decoration:underline" }) 
+                            @Html.LabelFor(m => m.SuppliersList, new { @style = "text-decoration:underline" })
                             <br />
-                            @for (int i = 0; i < Model.SuppliersList.Count; i++) 
+                            @for (int i = 0; i < Model.SuppliersList.Count; i++)
                             {
                                 @Html.Label("", Model.SuppliersList[i].NameOrType, new { @class = "form-check-label" })
                                 @Html.Raw("&nbsp")
                                 @Html.HiddenFor(m => m.SuppliersList[i].NameOrType)
-                                @Html.CheckBoxFor(m => m.SuppliersList[i].Checked, new { @class = "form-check-input", id = "supplierName_" + i  })
+                                @Html.CheckBoxFor(m => m.SuppliersList[i].Checked, new { @class = "form-check-input", id = "supplierName_" + i })
                                 <br />
                             }
                         </div>
@@ -82,9 +83,13 @@
                                             <br />
                                             @if (Model.LoggedIn && Model.StoreAccountCreated)
                                             {
-                                                using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity }, FormMethod.Post))
+                                                using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity, page = Model.CurrentPage }, FormMethod.Post))
                                                 {
                                                     @Html.AntiForgeryToken()
+                                                    @Html.Hidden("searchInput", Model.SearchInput)
+                                                    @Html.Hidden("sortOptions", Model.SortOptions)
+                                                    @Html.Hidden("selectedTypes", string.Join(",", Model.SelectedProductTypes))
+                                                    @Html.Hidden("selectedSuppliers", string.Join(",", Model.SelectedSuppliers))
                                                     <div class="row">
                                                         <div class="col-auto">
                                                             @Html.LabelFor(m => m.Quantity)
@@ -124,9 +129,13 @@
                                         <div class="card-body">
                                             <h6 class="card-title">@item.Product.ProductName</h6>
                                             <h6 class="card-subtitle mb-2 text-muted">Price: @item.Product.Price<br />Qty: @item.Quantity</h6>
-                                            @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = item.ShoppingCartID, returnControllerPath = "Home" }, FormMethod.Post))
+                                            @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = item.ShoppingCartID, returnControllerPath = "Home", page = Model.CurrentPage }, FormMethod.Post))
                                             {
                                                 @Html.AntiForgeryToken()
+                                                @Html.Hidden("searchInput", Model.SearchInput)
+                                                @Html.Hidden("sortOptions", Model.SortOptions)
+                                                @Html.Hidden("selectedTypes", string.Join(",", Model.SelectedProductTypes))
+                                                @Html.Hidden("selectedSuppliers", string.Join(",", Model.SelectedSuppliers))
                                                 <button type="submit" class="btn btn-outline-dark">Remove</button>
                                             }
                                         </div>

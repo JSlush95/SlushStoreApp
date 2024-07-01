@@ -29,6 +29,7 @@ namespace StorefrontApp.Models
         public int Quantity { get; set; }
         public bool LoggedIn { get; set; }
         public bool StoreAccountCreated {  get; set; }
+        public int? CurrentPage { get; set; }
     }
 
     public class CheckBoxItem
