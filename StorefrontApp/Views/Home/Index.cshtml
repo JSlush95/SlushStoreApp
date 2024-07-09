@@ -150,12 +150,18 @@
     </div>
     <br />
     <div>
-        @Html.PagedListPager(Model.Products, page => Url.Action("Index", new {
+        @Html.PagedListPager(Model.Products, page => Url.Action("Index", new
+        {
            page,
            searchInput = Model.SearchInput,
            sortOptions = Model.SortOptions,
            selectedTypes = Model.SelectedProductTypes,
            selectedSuppliers = Model.SelectedSuppliers
         }))
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <p class="lead text-center col-sm-2">Page @(Model.CurrentPage ?? 1) of @Model.MaxPages</p>
+        </div>
     </div>
 </main>

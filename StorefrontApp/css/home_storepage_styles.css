@@ -27,6 +27,7 @@ html {
 
 #product-header {
     background-color: burlywood;
+    justify-content:center;
     padding: 15px;
     border-radius: 5px;
     color: #8b4513;
@@ -84,6 +85,14 @@ html {
     background-color: #f5deb3;
     border: 1px solid #d2b48c;
     transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+p.lead {
+    color: #000000;
+    background-color: #FFFACD;
+    border: 1px solid #8B4513;
+    padding: 0.1rem 0.1rem;
+    margin: 1rem auto;
 }
 
 .form-check-input:checked {

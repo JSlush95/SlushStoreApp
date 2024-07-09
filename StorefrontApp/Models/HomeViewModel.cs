@@ -30,6 +30,7 @@ namespace StorefrontApp.Models
         public bool LoggedIn { get; set; }
         public bool StoreAccountCreated {  get; set; }
         public int? CurrentPage { get; set; }
+        public int MaxPages { get; set; }
     }
 
     public class CheckBoxItem

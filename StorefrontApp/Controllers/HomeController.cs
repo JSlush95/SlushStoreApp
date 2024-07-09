@@ -174,13 +174,23 @@ namespace StorefrontApp.Controllers
 
             int pageSize = 8;
             int pageNumber = (page ?? 1);
-            var paginatedProducts = sortedProducts.ToPagedList(pageNumber, pageSize);
+
+            // Calculate the total number of items, then the maximum pages.
+            int totalItems = sortedProducts.Count();
+            int maxPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            // Calculate the number of items to skip, get the current items.
+            int skip = (pageNumber - 1) * pageSize;
+            var paginatedProducts = sortedProducts.Skip(skip).Take(pageSize).ToList();
+            
+            // Convert the result to IPagedList.
+            var paginatedProductList = new StaticPagedList<Product>(paginatedProducts, pageNumber, pageSize, sortedProducts.Count());
 
             bool storeAccountCreated = _dbContext.StoreAccounts.Any(sa => sa.HolderID == userId);
 
             var viewModel = new HomeViewModel
             {
-                Products = paginatedProducts,
+                Products = paginatedProductList,
                 SortOptions = sortOptions.Value,
                 SearchInput = searchInput,
                 ProductTypeOptions = productsTypeList,
@@ -190,6 +200,7 @@ namespace StorefrontApp.Controllers
                 StoreAccountCreated = storeAccountCreated,
                 LoggedIn = User.Identity.IsAuthenticated,
                 CurrentPage = page,
+                MaxPages = maxPages,
                 ShoppingCartItems = (User.Identity.IsAuthenticated) ? _dbContext.ShoppingCarts.Include(sc => sc.ShoppingCartItems).FirstOrDefault(sc => sc.Account.HolderID == userId)?.ShoppingCartItems.ToList() : null
             };
 
