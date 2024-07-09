@@ -1,4 +1,5 @@
-﻿using System;
+﻿using StorefrontApp.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -14,7 +15,12 @@ namespace StorefrontApp.Models
 
         public Cryptography()
         {
-            _publicKey = ConfigurationManager.AppSettings["PublicKey"];
+            _publicKey = EnvironmentVariables.PublicKey;
+            if (string.IsNullOrEmpty(_publicKey))
+            {
+                Log.Warn("Public key environment variable not set.");
+                throw new ApplicationException("Public key environment variable not set.");
+            }
         }
 
         public string EncryptValue(string value)

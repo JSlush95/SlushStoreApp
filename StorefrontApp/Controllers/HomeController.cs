@@ -97,6 +97,10 @@ namespace StorefrontApp.Controllers
 
         public ActionResult QueryStringDelegate(HomeViewModel model)
         {
+            // This set of null-coalesce operator statements are from the add/remove from cart routes.
+            model.ProductTypeOptions = model.ProductTypeOptions ?? new List<CheckBoxItem>();
+            model.SuppliersList = model.SuppliersList ?? new List<CheckBoxItem>();
+
             // Preparing the selected types and suppliers for the delegation.
             // Checking if the SelectedProductTypes is null or not determines if this was done from add/remove from cart. The data already exists and is passed in, no need to parse the options.
             var selectedTypes = (model.SelectedProductTypes != null) ? model.SelectedProductTypes.Split(',').ToList() : model.ProductTypeOptions
