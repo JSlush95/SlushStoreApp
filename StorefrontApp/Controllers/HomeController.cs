@@ -112,10 +112,15 @@ namespace StorefrontApp.Controllers
                 .Select(sl => sl.NameOrType)
                 .ToList();
 
+            // The functionality for page remembering must adjust to stay within the possible pages (the page counts can change on new filters, since last request).
+            // Reset to first page if we overflow beyond the boundaries of max pages.
+            model.CurrentPage = (model.CurrentPage > model.MaxPages)? model.CurrentPage = 1 : model.CurrentPage;
+
             // Redirecting to Index with the necessary parameters.
             return RedirectToAction("Index", new
             {
                 page = model.CurrentPage,
+                maxPages = model.MaxPages,
                 searchInput = model.SearchInput,
                 sortOptions = model.SortOptions,
                 selectedTypes = selectedTypes.Any() ? string.Join(",", selectedTypes) : null,
@@ -221,7 +226,7 @@ namespace StorefrontApp.Controllers
         // POST: /Home/AddToCart
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> AddToCart(int productID, int quantity, string searchInput, string sortOptions, string selectedTypes, string selectedSuppliers, int? page)
+        public async Task<ActionResult> AddToCart(int productID, int quantity, string searchInput, string sortOptions, string selectedTypes, string selectedSuppliers, int? page, int? maxPages)
         {
             if (!ModelState.IsValid)
             {
@@ -273,6 +278,7 @@ namespace StorefrontApp.Controllers
             return RedirectToAction("QueryStringDelegate", new
             {
                 CurrentPage = page,
+                MaxPages = maxPages,
                 SearchInput = searchInput,
                 SortOptions = sortOptions,
                 SelectedProductTypes = selectedTypes,
@@ -283,7 +289,7 @@ namespace StorefrontApp.Controllers
         // POST: /Home/RemoveFromCart
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> RemoveFromCart(int productID, int shoppingCartID, string returnControllerPath, string searchInput, string sortOptions, string selectedTypes, string selectedSuppliers, int? page)
+        public async Task<ActionResult> RemoveFromCart(int productID, int shoppingCartID, string returnControllerPath, string searchInput, string sortOptions, string selectedTypes, string selectedSuppliers, int? page, int? maxPages)
         {
             var userCartItem = await _dbContext.ShoppingCartsItems
                 .Where(sci => sci.ShoppingCartID == shoppingCartID && sci.ProductID == productID)
@@ -315,6 +321,7 @@ namespace StorefrontApp.Controllers
                 return RedirectToAction(actionName, returnControllerPath, new
                 {
                     CurrentPage = page,
+                    MaxPages = maxPages,
                     SearchInput = searchInput,
                     SortOptions = sortOptions,
                     SelectedProductTypes = selectedTypes,

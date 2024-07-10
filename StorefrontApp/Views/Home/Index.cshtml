@@ -90,6 +90,7 @@
                                                     @Html.Hidden("sortOptions", Model.SortOptions)
                                                     @Html.Hidden("selectedTypes", string.Join(",", Model.SelectedProductTypes))
                                                     @Html.Hidden("selectedSuppliers", string.Join(",", Model.SelectedSuppliers))
+                                                    @Html.Hidden("maxPages", Model.MaxPages)
                                                     <div class="row">
                                                         <div class="col-auto">
                                                             @Html.LabelFor(m => m.Quantity)
@@ -136,6 +137,7 @@
                                                 @Html.Hidden("sortOptions", Model.SortOptions)
                                                 @Html.Hidden("selectedTypes", string.Join(",", Model.SelectedProductTypes))
                                                 @Html.Hidden("selectedSuppliers", string.Join(",", Model.SelectedSuppliers))
+                                                @Html.Hidden("maxPages", Model.MaxPages)
                                                 <button type="submit" class="btn btn-outline-dark">Remove</button>
                                             }
                                         </div>
