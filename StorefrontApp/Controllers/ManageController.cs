@@ -260,7 +260,8 @@ namespace StorefrontApp.Controllers
             {
                 AccountID = userId,
                 CardNumber = cardNumber,
-                KeyPIN = keyPIN
+                KeyPIN = keyPIN,
+                IsDeactivated = false
             };
 
             // Duplication check.
@@ -270,18 +271,34 @@ namespace StorefrontApp.Controllers
 
             if (existingPaymentMethodForSameUser != null)
             {
-                TempData["Message"] = "Please use a payment method that isn't registered for you already.";
-                return RedirectToAction("Index");
+                if (!existingPaymentMethodForSameUser.IsDeactivated)
+                {
+                    TempData["Message"] = "Please use a payment method that isn't registered for you already.";
+                    return RedirectToAction("Index");
+                }
+                else
+                {
+                    // Reactivating the card, since it exists already, but was previously deactived due to removal under a reference with an order.
+                    existingPaymentMethodForSameUser.IsDeactivated = false;
+                    userPaymentMethod = existingPaymentMethodForSameUser;
+                }
             }
+
+            var userAlias = _dbContext.StoreAccounts
+                .Where(sa => sa.HolderID == userId)
+                .Select(sa => sa.Alias)
+                .FirstOrDefault();
 
             // Encrypting the KeyPIN.
             var encryptedKeyPIN = _cryptography.EncryptValue(keyPIN);
             var encryptedCardNumber = _cryptography.EncryptValue(cardNumber);
+            var encryptedAlias = _cryptography.EncryptValue(userAlias);
 
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/"); // Bank app's URL
+                client.DefaultRequestHeaders.Add("Authorization", $"Alias {encryptedAlias}");
                 var response = await client.GetAsync($"api/VerifyCard?encryptedCardNumber={Uri.EscapeDataString(encryptedCardNumber)}&encryptedKeyPIN={Uri.EscapeDataString(encryptedKeyPIN)}");
 
                 if (!response.IsSuccessStatusCode)
@@ -300,13 +317,14 @@ namespace StorefrontApp.Controllers
 
             try
             {
-                _dbContext.PaymentMethods.Add(userPaymentMethod);
+                _dbContext.PaymentMethods.AddOrUpdate(userPaymentMethod);
                 await _dbContext.SaveChangesAsync();
                 TempData["Message"] = "Success with creating the payment method.";
             }
             catch (Exception ex)
             {
                 TempData["Message"] = "Error with creating the payment method.";
+                Log.Info($"Error with creating the payment method. {ex}");
             }
 
             return RedirectToAction("Index");
@@ -320,7 +338,23 @@ namespace StorefrontApp.Controllers
                 .Where(pm => pm.PaymentMethodID == paymentMethodID)
                 .FirstOrDefaultAsync();
 
-            var result = _dbContext.PaymentMethods.Remove(userPaymentMethod);
+            var relatedOrders = await _dbContext.Orders
+                .Where(o => o.PaymentMethodID == paymentMethodID)
+                .ToListAsync();
+
+            if (relatedOrders.Any())
+            {
+                // Cascade deletion rules give constraints, so we cannot remove it without complex logic that also removes the Order(s) involved.
+                foreach (var order in relatedOrders)
+                {
+                    // Update the boolean flag to reflect its removal.
+                    order.PaymentMethod.IsDeactivated = true;
+                }
+            }
+            else
+            {
+                _dbContext.PaymentMethods.Remove(userPaymentMethod);
+            }
 
             try
             {
@@ -337,6 +371,7 @@ namespace StorefrontApp.Controllers
         }
 
         // GET: /Manage/CreateOrder
+        // Used to populate the orders view.
         public async Task<ActionResult> CreateOrder()
         {
             var userId = GetCurrentUserId();
@@ -383,7 +418,7 @@ namespace StorefrontApp.Controllers
                 .Where(pm => pm.PaymentMethodID == model.SelectedPaymentMethodID)
                 .FirstOrDefault();
 
-            var encryptedKeyPIN = _cryptography.EncryptValue(paymentMethod.KeyPIN.ToString());
+            var encryptedKeyPIN = _cryptography.EncryptValue(paymentMethod.KeyPIN);
             var encryptedCardNumber = _cryptography.EncryptValue(paymentMethod.CardNumber);
 
             decimal totalOrderPrice = 0;
@@ -393,6 +428,7 @@ namespace StorefrontApp.Controllers
             {
                 BuyerID = userId,
                 PaymentMethodID = model.SelectedPaymentMethodID,
+                PaymentMethod = paymentMethod,
                 ShippingAddress = model.ShippingAddress,
                 OrderItems = new List<OrderItem>()
             };
@@ -432,10 +468,17 @@ namespace StorefrontApp.Controllers
                 }).ToList()
             };
 
+            var userAlias = await _dbContext.StoreAccounts
+                    .Where(sa => sa.HolderID == userId)
+                    .Select(sa => sa.Alias)
+                    .FirstOrDefaultAsync();
+            var encryptedAlias = _cryptography.EncryptValue(userAlias);
+
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/");
+                client.DefaultRequestHeaders.Add("Authorization", $"Alias {encryptedAlias}");
                 var jsonContent = JsonConvert.SerializeObject(transactionRequest);
                 var contentString = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("api/InitiateTransaction", contentString);
@@ -470,6 +513,7 @@ namespace StorefrontApp.Controllers
                 _dbContext.Orders.Add(order);
                 _dbContext.ShoppingCartsItems.RemoveRange(userCart.ShoppingCartItems);
                 await _dbContext.SaveChangesAsync();
+                ViewBag.Message = "Order successfully completed.";
             }
             catch (Exception ex)
             {
@@ -509,10 +553,17 @@ namespace StorefrontApp.Controllers
                 Amounts = orderItems.Select(oi => oi.TotalPrice).ToList()
             };
 
+            var userAlias = await _dbContext.StoreAccounts
+                    .Where(sa => sa.HolderID == userId)
+                    .Select(sa => sa.Alias)
+                    .FirstOrDefaultAsync();
+            var encryptedAlias = _cryptography.EncryptValue(userAlias);
+
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/");
+                client.DefaultRequestHeaders.Add("Authorization", $"Alias {encryptedAlias}");
                 var jsonContent = JsonConvert.SerializeObject(refundRequest);
                 var contentString = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("api/InitiateRefund", contentString);
@@ -531,6 +582,7 @@ namespace StorefrontApp.Controllers
                 try
                 {
                     _dbContext.SaveChanges();
+                    ViewBag.Message = "Refund successfully completed.";
                 }
                 catch (Exception ex)
                 {

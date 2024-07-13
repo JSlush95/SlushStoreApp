@@ -20,6 +20,8 @@ namespace StorefrontApp.Models
         [Required]
         [StringLength(5)]
         public string KeyPIN { get; set; }
+        [Required]
+        public bool IsDeactivated { get; set; }
 
         [ForeignKey("AccountID")]
         public virtual StoreAccount Account { get; set; }

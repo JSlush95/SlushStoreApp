@@ -28,10 +28,12 @@ namespace StorefrontApp.Models
             using (RSACryptoServiceProvider rsa = new RSACryptoServiceProvider())
             {
                 rsa.FromXmlString(_publicKey);
+                Log.Info("Encrypting item...");
 
                 var itemAsBytes = Encoding.UTF8.GetBytes(value);
                 var encryptedBytesID = rsa.Encrypt(itemAsBytes, RSAEncryptionPadding.Pkcs1);
 
+                Log.Info("Item encrypted.");
                 return Convert.ToBase64String(encryptedBytesID);
             }
         }

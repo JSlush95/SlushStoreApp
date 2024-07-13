@@ -29,6 +29,7 @@ namespace StorefrontApp.Models
     public enum AccountType
     {
         Personal,
-        Business
+        Business,
+        Dummy
     }
 }

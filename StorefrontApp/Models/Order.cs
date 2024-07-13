@@ -24,11 +24,16 @@ namespace StorefrontApp.Models
         public OrderStatus Status { get; set; }
         [Required]
         public DateTime PurchaseDate { get; set; }
+        // Utilized when a user deletes a payment method related to an Order, to prevent deletion of the Order.
+        // This is done so the original data is preserved, only use this in that scenario.
+        public int? DeletedPaymentMethodID { get; set; }     
 
         [ForeignKey("BuyerID")]
         public virtual StoreAccount StoreAccount { get; set; }
         [ForeignKey("PaymentMethodID")]
         public PaymentMethod PaymentMethod { get; set; }
+        [ForeignKey("DeletedPaymentMethodID")]
+        public PaymentMethod DeletedPaymentMethod { get; set; }
 
         public virtual ICollection<OrderItem> OrderItems { get; set; }
     }
