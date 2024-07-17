@@ -63,12 +63,22 @@
         <p class="lead">
             <strong>Total Order Price: @totalPrice</strong>
         </p>
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <input type="submit" value="Place Order" class="btn btn-outline-primary" />
+        if (Model.PaymentMethods != null && Model.PaymentMethods.Any())
+        {
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-10">
+                    <input type="submit" value="Place Order" class="btn btn-outline-primary" />
+                </div>
+                <br />
             </div>
+        }
+        else
+        {
             <br />
-        </div>
+            <div class="alert alert-primary" role="alert">
+                Please add a payment method to use.
+            </div>
+        }
         if (ViewBag.Message != null)
         {
             <br />

@@ -19,6 +19,12 @@ html {
     text-decoration: none;
 }
 
+.text-success {
+    background-color: #ffe4c4;
+    color: black !important;
+    text-align: center
+}
+
 .list-group {
     width: 20%;
 }

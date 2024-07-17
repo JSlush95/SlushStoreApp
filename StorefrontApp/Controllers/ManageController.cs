@@ -124,27 +124,19 @@ namespace StorefrontApp.Controllers
                 ViewBag.Message = TempData["Message"].ToString();
             }
 
-            var userId = GetCurrentUserId();
-            var user = await UserManager.FindByIdAsync(userId);
-            var userStoreAccountCount = _dbContext.StoreAccounts
-                .Where(sa => sa.HolderID == userId).Count();
-            var userShoppingCartItems = await _dbContext.ShoppingCartsItems
-                .Where(sci => sci.ShoppingCart.Account.HolderID == userId)
-                .ToListAsync();
-            var userOrderItems = await _dbContext.Orders
-                .Where(o => o.StoreAccount.HolderID == userId)
-                .ToListAsync();
-            var accountAlias = await _dbContext.StoreAccounts
-                .Where(u => u.HolderID == userId)
-                .Select(u => u.Alias)
-                .FirstOrDefaultAsync();
-            var userPaymentMethods = await _dbContext.PaymentMethods
-                .Where(pm => pm.Account.HolderID == userId)
-                .ToListAsync();
+            int userId = GetCurrentUserId();    
+            User user = await UserManager.FindByIdAsync(userId);
+            List<ShoppingCartItem> userShoppingCartItems = await _dbContext.GetShoppingCartItemsListAsync(userId);
+            List<Order> userOrders = await _dbContext.GetOrdersListAsync(userId);
+            int userStoreAccountCount = _dbContext.GetStoreAccountQuery(userId).Count();
+            StoreAccount account = await _dbContext.GetStoreAccountAsync(userId);
+            string accountAlias = account?.Alias;
+
+            List<PaymentMethod> userPaymentMethods = await _dbContext.GetPaymentMethodListAsync(userId);
 
             bool storeAccountCreated = (userStoreAccountCount == 0) ? false : true;
 
-            var model = new IndexViewModel
+            IndexViewModel model = new IndexViewModel
             {
                 HasPassword = HasPassword(),
                 PhoneNumber = await UserManager.GetPhoneNumberAsync(userId),
@@ -153,7 +145,7 @@ namespace StorefrontApp.Controllers
                 BrowserRemembered = await AuthenticationManager.TwoFactorBrowserRememberedAsync(User.Identity.GetUserId()),
                 EmailConfirmed = user.EmailConfirmed,
                 StoreAccountCreated = storeAccountCreated,
-                Orders = userOrderItems,
+                Orders = userOrders,
                 AliasName = accountAlias,
                 ShoppingCartItems = userShoppingCartItems,
                 PaymentMethods = userPaymentMethods
@@ -166,7 +158,7 @@ namespace StorefrontApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> CreateStoreAccount(AccountType accountTypeInput, string accountAliasInput)
         {
-            var userId = GetCurrentUserId();
+            int userId = GetCurrentUserId();
 
             if (!ModelState.IsValid)
             {
@@ -174,7 +166,7 @@ namespace StorefrontApp.Controllers
                 return RedirectToAction("Index");
             }
 
-            var userStoreAccount = new StoreAccount
+            StoreAccount userStoreAccount = new StoreAccount
             {
                 HolderID = userId,
                 DateOpened = DateTime.Now,
@@ -191,6 +183,7 @@ namespace StorefrontApp.Controllers
             catch (Exception ex)
             {
                 TempData["Message"] = "Error with creating the store account.";
+                Log.Warn($"Error adding the store account to the database. {ex}");
             }
 
             return RedirectToAction("Index");
@@ -207,15 +200,11 @@ namespace StorefrontApp.Controllers
                 return RedirectToAction("Index");
             }
 
-            var userId = GetCurrentUserId();
-            var userAccount = await _dbContext.StoreAccounts
-                .Where(sa => sa.HolderID == userId)
-                .FirstOrDefaultAsync();
-            var existingUser = await _dbContext.StoreAccounts
-                .Where(sa => sa.Alias == ChangeAliasInput)
-                .FirstOrDefaultAsync();
+            int userId = GetCurrentUserId();
+            StoreAccount userAccount = await _dbContext.GetStoreAccountAsync(userId);
+            bool existingUser = await _dbContext.CheckExistingUserAsync(ChangeAliasInput);
 
-            if (existingUser != null)
+            if (existingUser)
             {
                 TempData["Message"] = "This alias is already in use. Use a different one.";
                 return RedirectToAction("Index");
@@ -230,6 +219,7 @@ namespace StorefrontApp.Controllers
             catch (Exception ex)
             {
                 TempData["Message"] = "Error with creating the store account.";
+                Log.Warn($"Error with creating the store account. {ex}");
             }
 
             return RedirectToAction("Index");
@@ -240,7 +230,7 @@ namespace StorefrontApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> AddPaymentMethod(string cardNumber, string keyPIN)
         {
-            var userId = GetCurrentUserId();
+            int userId = GetCurrentUserId();
 
             // Manual validation for cardNumber.
             if (string.IsNullOrEmpty(cardNumber) || cardNumber.Length != 11)
@@ -256,7 +246,7 @@ namespace StorefrontApp.Controllers
                 return RedirectToAction("Index");
             }
 
-            var userPaymentMethod = new PaymentMethod
+            PaymentMethod userPaymentMethod = new PaymentMethod
             {
                 AccountID = userId,
                 CardNumber = cardNumber,
@@ -264,14 +254,13 @@ namespace StorefrontApp.Controllers
                 IsDeactivated = false
             };
 
-            // Duplication check.
-            var existingPaymentMethodForSameUser = await _dbContext.PaymentMethods
-                .Where(pm => (pm.CardNumber == cardNumber && pm.KeyPIN == keyPIN) && pm.Account.HolderID == userId)
-                .FirstOrDefaultAsync();
+            StoreAccount storeAccount = await _dbContext.GetStoreAccountAsync(userId);
+            PaymentMethod duplicatePaymentMethod = await _dbContext.GetExistingPaymentMethodAsync(userId, cardNumber, keyPIN);
+            string userAlias = storeAccount.Alias;
 
-            if (existingPaymentMethodForSameUser != null)
+            if (duplicatePaymentMethod != null)
             {
-                if (!existingPaymentMethodForSameUser.IsDeactivated)
+                if (!duplicatePaymentMethod.IsDeactivated)
                 {
                     TempData["Message"] = "Please use a payment method that isn't registered for you already.";
                     return RedirectToAction("Index");
@@ -279,20 +268,15 @@ namespace StorefrontApp.Controllers
                 else
                 {
                     // Reactivating the card, since it exists already, but was previously deactived due to removal under a reference with an order.
-                    existingPaymentMethodForSameUser.IsDeactivated = false;
-                    userPaymentMethod = existingPaymentMethodForSameUser;
+                    duplicatePaymentMethod.IsDeactivated = false;
+                    userPaymentMethod = duplicatePaymentMethod;
                 }
             }
 
-            var userAlias = _dbContext.StoreAccounts
-                .Where(sa => sa.HolderID == userId)
-                .Select(sa => sa.Alias)
-                .FirstOrDefault();
-
-            // Encrypting the KeyPIN.
-            var encryptedKeyPIN = _cryptography.EncryptValue(keyPIN);
-            var encryptedCardNumber = _cryptography.EncryptValue(cardNumber);
-            var encryptedAlias = _cryptography.EncryptValue(userAlias);
+            // Encrypting the KeyPIN, card number, and alias.
+            string encryptedKeyPIN = _cryptography.EncryptValue(keyPIN);
+            string encryptedCardNumber = _cryptography.EncryptValue(cardNumber);
+            string encryptedAlias = _cryptography.EncryptValue(userAlias);
 
             // Calling the Bank API.
             using (var client = new HttpClient())
@@ -307,7 +291,7 @@ namespace StorefrontApp.Controllers
                     return RedirectToAction("Index");
                 }
 
-                var result = await response.Content.ReadAsStringAsync();
+                string result = await response.Content.ReadAsStringAsync();
                 if (result.Contains("Card is not active") || result.Contains("Unauthorized"))
                 {
                     TempData["Message"] = result;
@@ -334,13 +318,9 @@ namespace StorefrontApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> RemovePaymentMethod(int paymentMethodID)
         {
-            var userPaymentMethod = await _dbContext.PaymentMethods
-                .Where(pm => pm.PaymentMethodID == paymentMethodID)
-                .FirstOrDefaultAsync();
+            PaymentMethod userPaymentMethod = await _dbContext.GetPaymentMethodFromPKeyAsync(paymentMethodID);
 
-            var relatedOrders = await _dbContext.Orders
-                .Where(o => o.PaymentMethodID == paymentMethodID)
-                .ToListAsync();
+            List<Order> relatedOrders = await _dbContext.GetRelatedOrdersListAsync(paymentMethodID);
 
             if (relatedOrders.Any())
             {
@@ -364,6 +344,7 @@ namespace StorefrontApp.Controllers
             catch (Exception ex)
             {
                 ViewBag.ErrorMessage = "Error with removing the payment method.";
+                Log.Warn($"Error with removing the payment method. {ex}");
                 return View("CustomError");
             }
 
@@ -374,20 +355,16 @@ namespace StorefrontApp.Controllers
         // Used to populate the orders view.
         public async Task<ActionResult> CreateOrder()
         {
-            var userId = GetCurrentUserId();
+            int userId = GetCurrentUserId();
 
-            var shoppingCartItems = await _dbContext.ShoppingCartsItems
-                .Where(sci => sci.ShoppingCart.Account.HolderID == userId)
-                .ToListAsync();
+            List<ShoppingCartItem> shoppingCartItems = await _dbContext.GetShoppingCartItemsListAsync(userId);
 
-            var paymentMethods = await _dbContext.PaymentMethods
-                .Where(pm => pm.Account.HolderID == userId)
-                .ToListAsync();
+            List<PaymentMethod> activePaymentMethods = await _dbContext.GetActivePaymentMethodsListAsync(userId);
 
-            var model = new CreateOrderViewModel
+            CreateOrderViewModel model = new CreateOrderViewModel
             {
                 ShoppingCartItems = shoppingCartItems,
-                PaymentMethods = paymentMethods
+                PaymentMethods = activePaymentMethods
             };
 
             return View(model);
@@ -398,13 +375,9 @@ namespace StorefrontApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> CreateOrder(CreateOrderViewModel model)
         {
-            var userId = GetCurrentUserId();
-            var userCart = await _dbContext.ShoppingCarts
-                .Where(sc => sc.Account.HolderID == userId)
-                .FirstOrDefaultAsync();
-            var paymentMethods = await _dbContext.PaymentMethods
-                .Where(pm => pm.Account.HolderID == userId)
-                .ToListAsync();
+            int userId = GetCurrentUserId();
+            ShoppingCart userCart = await _dbContext.GetShoppingCartAsync(userId);
+            List<PaymentMethod> paymentMethods = await _dbContext.GetPaymentMethodListAsync(userId);
             model.ShoppingCartItems = userCart.ShoppingCartItems.ToList();
             model.PaymentMethods = paymentMethods;
 
@@ -414,12 +387,10 @@ namespace StorefrontApp.Controllers
                 return View(model);
             }
 
-            var paymentMethod = _dbContext.PaymentMethods
-                .Where(pm => pm.PaymentMethodID == model.SelectedPaymentMethodID)
-                .FirstOrDefault();
+            PaymentMethod paymentMethod = await _dbContext.GetPaymentMethodFromPKeyAsync(model.SelectedPaymentMethodID);
 
-            var encryptedKeyPIN = _cryptography.EncryptValue(paymentMethod.KeyPIN);
-            var encryptedCardNumber = _cryptography.EncryptValue(paymentMethod.CardNumber);
+            string encryptedKeyPIN = _cryptography.EncryptValue(paymentMethod.KeyPIN);
+            string encryptedCardNumber = _cryptography.EncryptValue(paymentMethod.CardNumber);
 
             decimal totalOrderPrice = 0;
             List<OrderItem> items = new List<OrderItem>();
@@ -457,7 +428,7 @@ namespace StorefrontApp.Controllers
                     TotalAmount = group.Sum(item => item.Product.Price * item.Quantity)
                 }).ToList();
 
-            var transactionRequest = new TransactionRequest
+            TransactionRequest transactionRequest = new TransactionRequest
             {
                 EncryptedCardNumber = encryptedCardNumber,
                 EncryptedKeyPIN = encryptedKeyPIN,
@@ -468,31 +439,28 @@ namespace StorefrontApp.Controllers
                 }).ToList()
             };
 
-            var userAlias = await _dbContext.StoreAccounts
-                    .Where(sa => sa.HolderID == userId)
-                    .Select(sa => sa.Alias)
-                    .FirstOrDefaultAsync();
-            var encryptedAlias = _cryptography.EncryptValue(userAlias);
+            string userAlias = userCart.Account.Alias;
+            string encryptedAlias = _cryptography.EncryptValue(userAlias);
 
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/");
                 client.DefaultRequestHeaders.Add("Authorization", $"Alias {encryptedAlias}");
-                var jsonContent = JsonConvert.SerializeObject(transactionRequest);
+                string jsonContent = JsonConvert.SerializeObject(transactionRequest);
                 var contentString = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("api/InitiateTransaction", contentString);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    var content = await response.Content.ReadAsStringAsync();
+                    string content = await response.Content.ReadAsStringAsync();
                     if (content.Contains("Not enough funds to complete the purchase."))
                     {
                         ViewBag.Message = "Not enough money to complete the transaction.";
                         return View(model);
                     }
 
-                    ViewBag.Message = "Card validation failed or there was a server error.";
+                    ViewBag.Message = "Card validation failed, there was a server error.";
                     return View(model);
                 }
 
@@ -513,7 +481,7 @@ namespace StorefrontApp.Controllers
                 _dbContext.Orders.Add(order);
                 _dbContext.ShoppingCartsItems.RemoveRange(userCart.ShoppingCartItems);
                 await _dbContext.SaveChangesAsync();
-                ViewBag.Message = "Order successfully completed.";
+                TempData["Message"] = "Order successfully completed.";
             }
             catch (Exception ex)
             {
@@ -530,15 +498,10 @@ namespace StorefrontApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> RefundOrder(int orderID)
         {
-            var userId = GetCurrentUserId();
-            var order = await _dbContext.Orders
-                .Where(o => o.OrderID == orderID)
-                .FirstOrDefaultAsync();
+            int userId = GetCurrentUserId();
+            Order order = await _dbContext.GetOrderAsync(orderID);
             var orderItems = order.OrderItems;
-            var customerAlias = await _dbContext.StoreAccounts
-                .Where(sa => sa.HolderID == userId)
-                .Select(sa => sa.Alias)
-                .FirstOrDefaultAsync();
+            string customerAlias = order.StoreAccount.Alias;
 
             if (!ModelState.IsValid)
             {
@@ -547,42 +510,38 @@ namespace StorefrontApp.Controllers
             }
 
             // Serializing the request for the payload.
-            var refundRequest = new RefundRequest
+            RefundRequest refundRequest = new RefundRequest
             {
                 Certificates = orderItems.Select(oi => oi.Certificate).ToList(),
                 Amounts = orderItems.Select(oi => oi.TotalPrice).ToList()
             };
 
-            var userAlias = await _dbContext.StoreAccounts
-                    .Where(sa => sa.HolderID == userId)
-                    .Select(sa => sa.Alias)
-                    .FirstOrDefaultAsync();
-            var encryptedAlias = _cryptography.EncryptValue(userAlias);
+            string encryptedAlias = _cryptography.EncryptValue(customerAlias);
 
             // Calling the Bank API.
             using (var client = new HttpClient())
             {
                 client.BaseAddress = new Uri("https://localhost:44321/");
                 client.DefaultRequestHeaders.Add("Authorization", $"Alias {encryptedAlias}");
-                var jsonContent = JsonConvert.SerializeObject(refundRequest);
+                string jsonContent = JsonConvert.SerializeObject(refundRequest);
                 var contentString = new StringContent(jsonContent, Encoding.UTF8, "application/json");
                 var response = await client.PostAsync("api/InitiateRefund", contentString);
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    Log.Warn($"Refund unsuccessful for order {orderID} from {customerAlias}.");
-                    ViewBag.Message = $"Failed to refund this order.";
+                    Log.Warn($"Refund unsuccessful for order #{orderID}.");
+                    TempData["Message"] = $"Failed to refund this order.";
                     return RedirectToAction("Index");
                 }
 
-                Log.Warn($"Refund success for order {orderID} from {customerAlias}.");
-                ViewBag.Message = $"Successfully completed the refund.";
+                Log.Warn($"Refund success for order #{orderID}.");
+                TempData["Message"] = $"Successfully completed the refund.";
                 order.Status = OrderStatus.Refunded;
 
                 try
                 {
                     _dbContext.SaveChanges();
-                    ViewBag.Message = "Refund successfully completed.";
+                    TempData["Message"] = "Refund successfully completed.";
                 }
                 catch (Exception ex)
                 {
