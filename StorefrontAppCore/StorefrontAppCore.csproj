@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-StorefrontAppCore-1f07288a-7e85-438b-b8cc-437af1cd929d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="secrets.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.7" />
+    <PackageReference Include="NReco.Logging.File" Version="1.2.1" />
+    <PackageReference Include="X.PagedList.Mvc.Core" Version="10.0.3" />
+  </ItemGroup>
+
+</Project>

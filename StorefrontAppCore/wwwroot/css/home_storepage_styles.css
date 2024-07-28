@@ -1,0 +1,152 @@
+﻿body {
+    background: url(/images/triangles-bg-1.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+html {
+    height: auto;
+}
+
+.container {
+    padding-top: 5px;
+}
+
+.overflow-auto {
+    background-color: blanchedalmond;
+}
+
+.list-group-item {
+    background-color: tan;
+    transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+.card {
+    background-color: tan;
+}
+
+.card-body {
+    background-color: bisque;
+}
+
+#product-header {
+    background-color: burlywood;
+    justify-content:center;
+    padding: 15px;
+    border-radius: 5px;
+    color: #8b4513;
+}
+
+.btn.btn-outline-dark {
+    color: #fff;
+    cursor: pointer;
+    background-color: #cd853f;
+    border: 1px solid #a0522d;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.btn.btn-outline-dark {
+    background-color: #a0522d;
+    border-color: #8b4513;
+}
+
+.btn.btn-outline-dark:focus, .btn btn-outline-dark:active {
+    background-color: #8b4513;
+    border-color: #5a2d0c;
+}
+
+.card-title {
+    justify-items:center;
+}
+
+.card-header {
+    background-color: burlywood;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination li {
+    margin: 0 5px;
+}
+
+.pagination a {
+    display: block;
+    padding: 10px 15px;
+    border: 1px solid #d2b48c;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #8b4513;
+    background-color: #f5deb3;
+    transition: background-color 0.3s ease;
+}
+
+.pagination a:hover {
+    background-color: #deb887;
+    border-color: #cda15e;
+    color: #5a2d0c;
+}
+
+.pagination .active a {
+    color: #fff;
+    background-color: #cd853f;
+    border-color: #cd853f;
+}
+
+.pagination .disabled a {
+    color: #d3d3d3;
+    pointer-events: none;
+    background-color: #f5f5f5;
+    border-color: #d2b48c;
+}
+
+.form-check-types .form-check-input, .form-check-suppliers .form-check-input {
+    background-color: #f5deb3;
+    border: 1px solid #d2b48c;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.form-check-types .form-check-input:checked, .form-check-suppliers .form-check-input:checked {
+    background-color: #cd853f;
+    border-color: #cd853f;
+}
+
+.form-check-types .form-check-input:focus, .form-check-suppliers .form-check-input:focus {
+    border-color: #deb887;
+}
+
+#SortOptions, #SearchInput {
+    color: #8b4513;
+    background-color: #f5deb3;
+    border: 1px solid #d2b48c;
+    border-radius: 0.25rem;
+    transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#SortOptions:focus, #SearchInput:focus {
+    color: #5a2d0c;
+    background-color: #fff;
+    border-color: #deb887;
+}
+
+p.lead {
+    color: #000000;
+    background-color: #FFFACD;
+    border: 1px solid #8B4513;
+    padding: 0.1rem 0.1rem;
+    margin: 1rem auto;
+}
+
+.text-danger.validation-summary-errors li, #Password-error, #Username-error {
+    color: #ffd800;
+}
+
+.alert {
+    border: 1px solid transparent;
+    color: #8b4513;
+    background-color: #f5deb3;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}

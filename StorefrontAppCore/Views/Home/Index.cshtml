@@ -1,0 +1,171 @@
+﻿@model StorefrontAppCore.Models.HomeViewModel
+@using X.PagedList.Mvc.Core;
+@using X.PagedList;
+@{
+    ViewBag.Title = "Store Home Page";
+}
+<head>
+    <link rel="stylesheet" type="text/css" href="~/css/home_storepage_styles.css"  asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css"  asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+</head>
+
+<main>
+    <div class="container">
+        <div class="row">
+            @if (Model.ProductTypeOptions != null && Model.ProductTypeOptions.Any())
+            {
+                <div class="col-md-2">
+                    @using (Html.BeginForm("QueryStringDelegate", "Home", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.CurrentPage)
+                        <div class="row">
+                            @Html.LabelFor(m => m.SearchInput, new { @style = "text-decoration:underline" })
+                            @Html.TextBoxFor(m => m.SearchInput, new { @class = "form-control", @Value = Model.SearchInput })
+                        </div>
+                        <br />
+                        <div class="row">
+                            @Html.LabelFor(m => m.SortOptions, new { @style = "text-decoration:underline" })
+                            @Html.DropDownListFor(m => m.SortOptions, new SelectList(Enum.GetValues(typeof(StorefrontAppCore.Models.Sort))), new { @class = "form-control" })
+                        </div>
+                        <br />
+                        <div class="form-check-types">
+                            @Html.LabelFor(m => m.ProductTypeOptions, new { @style = "text-decoration:underline" })
+                            <br>
+                            @for (int i = 0; i < Model.ProductTypeOptions.Count; i++)
+                            {
+                                @Html.Label("", Model.ProductTypeOptions[i].NameOrType, new { @class = "form-check-label" });
+                                @Html.Raw("&nbsp")
+                                @Html.HiddenFor(m => m.ProductTypeOptions[i].NameOrType)
+                                @Html.CheckBoxFor(m => m.ProductTypeOptions[i].Checked, new { @class = "form-check-input", id = "productType_" + i })
+                                <br />
+                            }
+                            <br />
+                        </div>
+                        <div class="form-check-suppliers">
+                            @Html.LabelFor(m => m.SuppliersList, new { @style = "text-decoration:underline" })
+                            <br />
+                            @for (int i = 0; i < Model.SuppliersList.Count; i++)
+                            {
+                                @Html.Label("", Model.SuppliersList[i].NameOrType, new { @class = "form-check-label" })
+                                @Html.Raw("&nbsp")
+                                @Html.HiddenFor(m => m.SuppliersList[i].NameOrType)
+                                @Html.CheckBoxFor(m => m.SuppliersList[i].Checked, new { @class = "form-check-input", id = "supplierName_" + i })
+                                <br />
+                            }
+                        </div>
+                        <br />
+                        <button type="submit" class="btn btn-outline-dark">Search</button>
+                    }
+                </div>
+                <br />
+            }
+            <div class="col-lg">
+                <div class="container">
+                    @if (Model.Products != null && Model.Products.Any())
+                    {
+                        <div class="row">
+                            @foreach (var product in Model.Products)
+                            {
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <div class="row" id="product-header">
+                                                <div class="col-auto">
+                                                    <h4 class="card-title">@product.ProductName</h4>
+                                                </div>
+                                            </div>
+                                            <br />
+                                            <h5 class="card-subtitle mb-2 text-muted">Type: @product.ProductType, Price: @product.Price</h5>
+                                            <ul class="list-group">
+                                                <li class="list-group-item">Description: @product.ProductDescription</li>
+                                                <li class="list-group-item">Supplier: @product.Supplier.SupplierName</li>
+                                            </ul>
+                                            <br />
+                                            @if (Model.LoggedIn && Model.StoreAccountCreated)
+                                            {
+                                                using (Html.BeginForm("AddToCart", "Home", new { productID = product.ProductID, quantity = Model.Quantity, page = Model.CurrentPage }, FormMethod.Post))
+                                                {
+                                                    @Html.AntiForgeryToken()
+                                                    @Html.Hidden("searchInput", Model.SearchInput)
+                                                    @Html.Hidden("sortOptions", Model.SortOptions)
+                                                    @Html.Hidden("selectedTypes", string.Join(",", Model.SelectedProductTypes))
+                                                    @Html.Hidden("selectedSuppliers", string.Join(",", Model.SelectedSuppliers))
+                                                    @Html.Hidden("maxPages", Model.MaxPages)
+                                                    <div class="row">
+                                                        <div class="col-auto">
+                                                            @Html.LabelFor(m => m.Quantity)
+                                                            @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", @Value = "0" })
+                                                        </div>
+                                                        <div class="col-auto align-content-end" style="padding:0px">
+                                                            <i class="bi bi-arrow-left"></i>
+                                                            <button type="submit" class="btn btn-outline-dark">Add to Cart</button>
+                                                        </div>
+                                                    </div>
+
+                                                }
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center top-50" role="alert">No data found.</div>
+                    }
+                </div>
+            </div>
+            @if (Model.ShoppingCartItems != null && Model.ShoppingCartItems.Any())
+            {
+                <div class="col-md-2">
+                    <strong>Shopping Cart Items:</strong>
+                    <br />
+                    <div class="overflow-auto" style="max-height: 900px; border: 1px solid #ddd; padding: 5px;">
+                        <ul class="list-group">
+                            @foreach (var item in Model.ShoppingCartItems)
+                            {
+                                <li class="list-group-item">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h6 class="card-title">@item.Product.ProductName</h6>
+                                            <h6 class="card-subtitle mb-2 text-muted">Price: @item.Product.Price<br />Qty: @item.Quantity</h6>
+                                            @using (Html.BeginForm("RemoveFromCart", "Home", new { productID = item.ProductID, shoppingCartID = item.ShoppingCartID, returnControllerPath = "Home", page = Model.CurrentPage }, FormMethod.Post))
+                                            {
+                                                @Html.AntiForgeryToken()
+                                                @Html.Hidden("searchInput", Model.SearchInput)
+                                                @Html.Hidden("sortOptions", Model.SortOptions)
+                                                @Html.Hidden("selectedTypes", string.Join(",", Model.SelectedProductTypes))
+                                                @Html.Hidden("selectedSuppliers", string.Join(",", Model.SelectedSuppliers))
+                                                @Html.Hidden("maxPages", Model.MaxPages)
+                                                <button type="submit" class="btn btn-outline-dark">Remove</button>
+                                            }
+                                        </div>
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    <br />
+    <div>
+        @Html.PagedListPager(Model.Products, page => Url.Action("Index", new
+        {
+           page,
+           searchInput = Model.SearchInput,
+           sortOptions = Model.SortOptions,
+           selectedTypes = Model.SelectedProductTypes,
+           selectedSuppliers = Model.SelectedSuppliers
+        }))
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+            <p class="lead text-center col-sm-2">Page @(Model.CurrentPage ?? 1) of @Model.MaxPages</p>
+        </div>
+    </div>
+</main>
