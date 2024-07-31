@@ -447,7 +447,7 @@ namespace StorefrontAppCore.Controllers
             // Calling the Bank API
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://localhost:7265/");
+                client.BaseAddress = new Uri("https://slushbanking20240729194751.azurewebsites.net/");
                 client.DefaultRequestHeaders.Add("Authorization", $"Alias {encryptedAlias}");
                 string jsonContent = JsonSerializer.Serialize(transactionRequest);
                 var contentString = new StringContent(jsonContent, Encoding.UTF8, "application/json");
