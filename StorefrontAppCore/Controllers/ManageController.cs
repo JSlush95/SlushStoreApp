@@ -285,7 +285,7 @@ namespace StorefrontAppCore.Controllers
             // Calling the Bank API
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://localhost:7265/"); // Bank app's URL
+                client.BaseAddress = new Uri("https://slushbanking20240729194751.azurewebsites.net/"); // Bank app's URL
                 client.DefaultRequestHeaders.Add("Authorization", $"Alias {encryptedAlias}");
                 var response = await client.GetAsync($"api/bankAPI/VerifyCard?encryptedCardNumber={Uri.EscapeDataString(encryptedCardNumber)}&encryptedKeyPIN={Uri.EscapeDataString(encryptedKeyPIN)}");
 
@@ -523,7 +523,7 @@ namespace StorefrontAppCore.Controllers
             // Calling the Bank API
             using (var client = new HttpClient())
             {
-                client.BaseAddress = new Uri("https://localhost:7265/");
+                client.BaseAddress = new Uri("https://slushbanking20240729194751.azurewebsites.net/");
                 client.DefaultRequestHeaders.Add("Authorization", $"Alias {encryptedAlias}");
                 string jsonContent = JsonSerializer.Serialize(refundRequest);
                 var contentString = new StringContent(jsonContent, Encoding.UTF8, "application/json");
