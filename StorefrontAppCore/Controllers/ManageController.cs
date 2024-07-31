@@ -200,7 +200,13 @@ namespace StorefrontAppCore.Controllers
         {
             if (!ModelState.IsValid)
             {
-                TempData["Message"] = "Error, please fill out the fields with valid data.";
+                TempData["Message"] = "Error, please fill out the field with valid alphanumeric data.";
+                return RedirectToAction(nameof(ManageController.Index));
+            }
+
+            if (ChangeAliasInput.Any(x => !char.IsLetterOrDigit(x) || !char.IsWhiteSpace(x)))
+            {
+                TempData["Message"] = "Only use alphanumeric characters, please.";
                 return RedirectToAction(nameof(ManageController.Index));
             }
 

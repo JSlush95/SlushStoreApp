@@ -23,6 +23,17 @@ html {
     text-decoration: none;
 }
 
+#specialRef {
+    color: #ffd800;
+    text-shadow: 1px 1px 0 #b5651d, -1px -1px 0 #b5651d, -1px 1px 0 #b5651d, 1px -1px 0 #b5651d;
+    text-decoration:underline;
+}
+
+#specialRef:hover {
+    color: #ffffe0;
+    text-shadow: 1px 1px 0 #b5651d, -1px -1px 0 #b5651d, -1px 1px 0 #b5651d, 1px -1px 0 #b5651d;
+}
+
 .text-success {
     background-color: #ffe4c4;
     color: black !important;

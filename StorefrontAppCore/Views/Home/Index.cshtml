@@ -57,6 +57,13 @@
                         </div>
                         <br />
                         <button type="submit" class="btn btn-outline-dark">Search</button>
+                        @if(Model.ShoppingCartItems != null && Model.ShoppingCartItems.Any())
+                        {
+                            <br />
+                            <div class="row">
+                                @Html.ActionLink("Checkout", "CreateOrder", "Manage", null, new { @class = "btn btn-outline-dark" })
+                            </div>
+                        }
                     }
                 </div>
                 <br />
