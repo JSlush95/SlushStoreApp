@@ -129,15 +129,20 @@ namespace StorefrontAppCore.Controllers
                 ViewBag.Message = TempData["Message"].ToString();
             }
 
+            if (TempData.ContainsKey("2FAMessage"))
+            {
+                ViewBag.Message2FA = TempData["2FAMessage"];
+            }
+
             User user = await GetCurrentUserAsync(GetCurrentUserId());
-            int? userId = GetCurrentUserId();    
+            int? userId = GetCurrentUserId(); 
             List<ShoppingCartItem> userShoppingCartItems = await _dbContext.GetShoppingCartItemsListAsync(userId);
             List<Order> userOrders = await _dbContext.GetOrdersListAsync(userId);
             int userStoreAccountCount = _dbContext.GetStoreAccountQuery(userId).Count();
             StoreAccount account = await _dbContext.GetStoreAccountAsync(userId);
             string accountAlias = account?.Alias;
 
-            List<PaymentMethod> userPaymentMethods = await _dbContext.GetPaymentMethodListAsync(userId);
+            List<PaymentMethod> userPaymentMethods = await _dbContext.GetActivePaymentMethodsListAsync(userId);
 
             bool storeAccountCreated = (userStoreAccountCount == 0) ? false : true;
 
@@ -153,6 +158,7 @@ namespace StorefrontAppCore.Controllers
                 ShoppingCartItems = userShoppingCartItems,
                 PaymentMethods = userPaymentMethods
             };
+
             return View(model);
         }
 
@@ -385,7 +391,7 @@ namespace StorefrontAppCore.Controllers
         {
             int? userId = GetCurrentUserId();
             ShoppingCart userCart = await _dbContext.GetShoppingCartAsync(userId);
-            List<PaymentMethod> paymentMethods = await _dbContext.GetPaymentMethodListAsync(userId);
+            List<PaymentMethod> paymentMethods = await _dbContext.GetActivePaymentMethodsListAsync(userId);
             model.ShoppingCartItems = userCart.ShoppingCartItems.ToList();
             model.PaymentMethods = paymentMethods;
 
@@ -571,6 +577,12 @@ namespace StorefrontAppCore.Controllers
             if (user == null)
             {
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            }
+
+            if (!user.EmailConfirmed)
+            {
+                TempData["2FAMessage"] = "Email must be confirmed for 2FA.";
+                return RedirectToAction("Index", "Manage");
             }
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);

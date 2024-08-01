@@ -217,17 +217,17 @@ namespace StorefrontAppCore.Data
             return (existingAccount != null) ? true : false;
         }
 
-        public List<PaymentMethod> GetPaymentMethodList(int? userID)
+        public List<PaymentMethod> GetActivePaymentMethodsList(int? userID)
         {
             return PaymentMethods
-                .Where(pm => pm.Account.HolderID == userID)
+                .Where(pm => pm.Account.HolderID == userID && !pm.Deactivated)
                 .ToList();
         }
 
-        public async Task<List<PaymentMethod>> GetPaymentMethodListAsync(int? userID)
+        public async Task<List<PaymentMethod>> GetActivePaymentMethodsListAsync(int? userID)
         {
             return await PaymentMethods
-                .Where(pm => pm.Account.HolderID == userID)
+                .Where(pm => pm.Account.HolderID == userID && !pm.Deactivated)
                 .ToListAsync();
         }
 
@@ -259,20 +259,6 @@ namespace StorefrontAppCore.Data
             return await PaymentMethods
                 .Where(pm => (pm.CardNumber == cardNumber && pm.KeyPIN == keyPIN) && pm.Account.HolderID == userID)
                 .FirstOrDefaultAsync();
-        }
-
-        public List<PaymentMethod> GetActivePaymentMethodsList(int? userID)
-        {
-            return PaymentMethods
-                .Where(pm => pm.Account.HolderID == userID && !pm.Deactivated)
-                .ToList();
-        }
-
-        public async Task<List<PaymentMethod>> GetActivePaymentMethodsListAsync(int? userID)
-        {
-            return await PaymentMethods
-                .Where(pm => pm.Account.HolderID == userID && !pm.Deactivated)
-                .ToListAsync();
         }
 
         public ShoppingCart GetShoppingCart(int? userID)
@@ -381,6 +367,10 @@ namespace StorefrontAppCore.Data
         {
             return Orders
                 .Where(o => o.StoreAccount.HolderID == userID)
+                .Include(o => o.PaymentMethod)
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .ThenInclude(p => p.Supplier)
                 .ToList();
         }
 
@@ -388,6 +378,7 @@ namespace StorefrontAppCore.Data
         {
             return await Orders
                 .Where(o => o.StoreAccount.HolderID == userID)
+                .Include(o => o.PaymentMethod)
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
                 .ThenInclude(p => p.Supplier)

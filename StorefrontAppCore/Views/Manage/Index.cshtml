@@ -26,7 +26,7 @@
                         }
                         else
                         {
-                            @Html.ActionLink("Create", "SetPassword", "Manage", null, new { @class = "list-group-item list-group-item-action" })
+                            @Html.ActionLink("Create Password", "SetPassword", "Manage", null, new { @class = "list-group-item list-group-item-action" })
                         }
                     </div>
                 </div>
@@ -56,8 +56,13 @@
             </div>
         </div>
         <br />
-        <dt><u>Two-Factor Authentication</u></dt>
-        <dd>
+        <div class="custom-list-group">
+            <strong>Two-Factor Authentication:</strong>
+            <ul>
+                <li>Email Only. A valid email is needed for this feature.</li>
+                <li>2FA is in effect on subsequent login(s) when activated.</li>
+            </ul>
+        </div>
             @if (Model.TwoFactor)
             {
                 using (Html.BeginForm("DisableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
@@ -73,20 +78,28 @@
                 using (Html.BeginForm("EnableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
                 {
                     @Html.AntiForgeryToken()
+                    @Html.ValidationSummary("", new { @class = "text-danger" })
                     <text><mark>Disabled</mark>
                         <input type="submit" value="Enable" class="btn btn-link" id="two-FA-link" />
                     </text>
                 }
             }
-        </dd>
+            @if (ViewBag.Message2FA != null)
+            {
+                <br />
+                <div class="alert alert-light w-25 h-25" role="alert">
+                    @ViewBag.Message2FA
+                </div>
+            }
         <br />
         @if (Model.StoreAccountCreated)
         {
             <br />
-            <div class="alias-note">
+            <div class="custom-list-group">
                 <strong>Alias Note</strong>
                 <ul>
-                    <li>An account alias is used to connect to the companion <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> website. It must match the other website's alias.</li>
+                    <li>An account alias is used to connect to the companion <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> website. 
+                        It must match your <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> account alias.</li>
                     <li><strong>Aliases are alphanumeric characters only.</strong></li>
                 </ul>
             </div>
@@ -169,7 +182,7 @@
         }
         @if (Model.StoreAccountCreated)
         {
-            <div class="payment-method-note-section">
+            <div class="custom-list-group">
                 <strong>Payment Method Note:</strong>
                 <ul>
                     <li>The Key ID is a 5-digit non-negative, non-decimal number issued from the companion <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> website. No other issued cards will work.</li>
@@ -308,8 +321,8 @@
             <strong>Store Account Not Created</strong>
             <ul>
                 <li>A store account is needed to interact with the store system.</li>
-                <li>An account alias is needed to interact with the companion storefront website.</li>
-                <li>The account alias must match the same one used for the companion bank website.</li>
+                <li>An account alias is required to connect to the companion website: <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a>.
+                    It must match your <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> account's alias.</li>
                 <li>An account alias cannot already be in use, make it strong. <strong>Alphanumeric characters only.</strong></li>
             </ul>
             <br />
