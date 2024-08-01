@@ -113,11 +113,17 @@
             {
                 @Html.AntiForgeryToken()
                 @Html.ValidationSummary("", new { @class = "text-danger" })
+                if (ViewBag.MessageAliasChange != null)
+                {
+                    <div class="alert alert-primary w-25 h-25" role="alert">
+                        @ViewBag.MessageAliasChange
+                    </div>
+                }
                 <br />
                 <div class="row">
                     @Html.LabelFor(m => m.ChangeAliasInput, new { @class = "col-md-1 col-form-label" })
                     <div class="col-md-5">
-                        @Html.TextBoxFor(m => m.ChangeAliasInput, new { @class = "form-control", required = "required" })
+                        @Html.TextBoxFor(m => m.ChangeAliasInput, new { @class = "form-control", required = "required", maxLength = "53"})
                     </div>
                 </div>
                 <div class="row">
@@ -343,10 +349,18 @@
                     </div>
                 </div>
                 <br />
+                if (ViewBag.MessageAliasChange != null)
+                {
+                    <div class="alert alert-primary w-25 h-25" role="alert">
+                        @ViewBag.MessageAliasChange
+                    </div>
+                    <br />
+                }
+                <br />
                 <div class="row">
                     @Html.LabelFor(m => m.AccountAliasInput, new { @class = "col-md-2 col-form-label" })
                     <div class="col-md-5">
-                        @Html.TextBoxFor(m => m.AccountAliasInput, new { @class = "form-control" })
+                        @Html.TextBoxFor(m => m.AccountAliasInput, new { @class = "form-control", required = "required", maxLength = "53" })
                     </div>
                 </div>
                 <br />

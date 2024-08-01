@@ -134,6 +134,11 @@ namespace StorefrontAppCore.Controllers
                 ViewBag.Message2FA = TempData["2FAMessage"];
             }
 
+            if (TempData.ContainsKey("AliasChangeMessage"))
+            {
+                ViewBag.MessageAliasChange = TempData["AliasChangeMessage"];
+            }
+
             User user = await GetCurrentUserAsync(GetCurrentUserId());
             int? userId = GetCurrentUserId(); 
             List<ShoppingCartItem> userShoppingCartItems = await _dbContext.GetShoppingCartItemsListAsync(userId);
@@ -210,9 +215,9 @@ namespace StorefrontAppCore.Controllers
                 return RedirectToAction(nameof(ManageController.Index));
             }
 
-            if (ChangeAliasInput.Any(x => !char.IsLetterOrDigit(x) || !char.IsWhiteSpace(x)))
+            if (ChangeAliasInput.Any(x => !char.IsLetterOrDigit(x) || char.IsWhiteSpace(x)))
             {
-                TempData["Message"] = "Only use alphanumeric characters, please.";
+                TempData["AliasChangeMessage"] = "Only alphanumeric characters, please.";
                 return RedirectToAction(nameof(ManageController.Index));
             }
 
