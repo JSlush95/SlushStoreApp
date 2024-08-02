@@ -205,6 +205,22 @@ namespace StorefrontAppCore.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AddToCart(int productID, int quantity, string searchInput, string sortOptions, string selectedTypes, string selectedSuppliers, int? page, int? maxPages)
         {
+            var delegateModel = new
+            {
+                CurrentPage = page,
+                MaxPages = maxPages,
+                SearchInput = searchInput,
+                SortOptions = sortOptions,
+                SelectedProductTypes = selectedTypes,
+                SelectedSuppliers = selectedSuppliers
+            };
+
+            if (quantity < 1)
+            {
+                // Redirect to the QueryStringDelegate action to preserve query string parameters
+                return RedirectToAction(nameof(HomeController.QueryStringDelegate), delegateModel);
+            }
+
             var userId = GetCurrentUserId();
             var user = await GetCurrentUserAsync(userId);
 
@@ -245,15 +261,7 @@ namespace StorefrontAppCore.Controllers
             }
 
             // Redirect to the QueryStringDelegate action to preserve query string parameters
-            return RedirectToAction(nameof(HomeController.QueryStringDelegate), new
-            {
-                CurrentPage = page,
-                MaxPages = maxPages,
-                SearchInput = searchInput,
-                SortOptions = sortOptions,
-                SelectedProductTypes = selectedTypes,
-                SelectedSuppliers = selectedSuppliers
-            });
+            return RedirectToAction(nameof(HomeController.QueryStringDelegate), delegateModel);
         }
 
         // POST: /Home/RemoveFromCart
