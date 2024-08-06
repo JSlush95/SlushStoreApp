@@ -1,1 +1,218 @@
-# StorefrontApp
+# Slush Store
+
+Slush Store is an .NET Framework 4.8 version MVC application that simulates an online storefront, featuring user account management, shopping cart functionality, order processing, and a secure integration with an external banking web API [companion application](https://github.com/JSlush95/BankingApp). This interaction is for payment and refund transactions. This application leverages ASP.NET Identity for user authentication and authorization, and Entity Framework 6 for data access.
+
+## Table of Contents
+
+- [Features](#features)
+- [Getting Started](#getting-started)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Configuration](#configuration)
+- [Usage](#usage)
+    - [Bank API Integration/Security](#bank-api-integrationsecurity)
+    - [User Account Management (Account Controller)](#user-account-management-account-controller)
+    - [Store Account Management (Manage Controller)](#store-account-management-manage-controller)
+    - [Product and Store Displays (Home Controller)](#product-and-store-displays-home-controller)
+
+## Features
+
+- User Registration and Authentication with ASP.NET Identity
+- Data Management with Entity Framework
+- Shopping Cart Management
+- Order Placement and Tracking
+- Integration with an External Banking Web API For Purchases
+- Two-Factor Authentication (2FA)
+- Email Confirmation for Accounts
+
+## Getting Started
+
+### Prerequisites (LEGACY WARNING)
+
+- [.NET Framework](https://dotnet.microsoft.com/en-us/download/dotnet-framework)
+- [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
+   - Note: this is for LocalDB testing, which this project is configured to. **Visual Studio** implements SQL Server natively. Alternative database implementation will require a different access provider in ``ApplicationDBContext.cs``. Entity Framework has some providers available. For example, Postgresql has a npgsql EF provider, which will use different database interaction syntax than what was used originally, requiring a possible migration schema change.
+
+### Configuration - .NET Framework
+
+- For the .NET Framework 4.8 version of the application, configuration is managed differently compared to .NET Core. The environment variables are used for sensitive settings instead of configuration files like `AppSettingsSecrets.config`. The legacy configuration binding via `.config` is no longer used but may still be present in the project. The builder and services are not present, so modernized dependency injection is harder.
+- This program uses the default SQL server functionality. Therefore its relevant locations are in web.config
+
+#### Environment Variables
+
+In the .NET Framework application, you can configure environment variables to manage sensitive settings such as email accounts, SMTP hosts, and public keys. The `EnvironmentVariables.cs` class in the `Utilities` folder provides access to these environment variables. Here’s an example of how to use it:
+- My program will use these references for their respective functionalities of emailing and encrypting.
+    ```
+    public static class EnvironmentVariables
+    {
+        public static string MailAccount => Environment.GetEnvironmentVariable("MailAccount", EnvironmentVariableTarget.Machine);
+        public static string MailPassword => Environment.GetEnvironmentVariable("MailPassword", EnvironmentVariableTarget.Machine);
+        public static string SmtpHost => Environment.GetEnvironmentVariable("SmtpHost", EnvironmentVariableTarget.Machine);
+        public static string PublicKey => Environment.GetEnvironmentVariable("PublicKey", EnvironmentVariableTarget.Machine);
+    }
+    ```
+Note: ``ApplicationDBContext`` will contain the connection string reference:
+- In Visual Studio, you can create an SQL server manually in the SQL Server Object Explorer, then you may use that database name instead.
+    ```
+    public ApplicationDbContext()
+                : base("DefaultConnection")
+            {
+            }
+    ```
+
+Example of how I generated a cryptographic pair of private and public keys:
+    ```
+        RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
+        
+        // RSA keys in XML format
+        string publicPrivateKeyXML = rsa.ToXmlString(true);
+        string publicOnlyKeyXML = rsa.ToXmlString(false);
+        
+        // Export to file, etc
+    ```
+   
+4. **Apply Migrations:**
+
+    After configuring the connection string, apply the migrations to set up the database schema using either the .NET CLI or Package Manager Console:
+
+    **Using Package Manager Console:**
+
+    ```
+    Add-Migration InitialCreate
+    Update-Database
+    ```
+
+### Installation
+
+1. Clone the repository (you can check out to this branch if you want afterwards):
+    ```
+    git clone https://github.com/JSlush95/StorefrontApp.git
+    cd StorefrontApp
+    ```
+
+2. Restore .NET dependencies:
+    ```
+    dotnet restore
+    ```
+
+3. Build the project:
+    ```
+    dotnet build
+    ```
+
+## Usage
+
+### Bank API Integration/Security
+Utilizing asymmetric encryption with a public key and a secretly kept private key, I can keep the data secure while interacting with this banking website web API.
+
+The application integrates with an external banking API for payment processing and refunds. It securely transmits encrypted card and user data to the bank, handles responses, and updates the order status accordingly.
+
+### User Account Management (Account Controller)
+The application provides comprehensive user account management features, including registration, login, password recovery, and profile updates. It uses ASP.NET Identity for authentication and authorization, which allows more secure management.
+
+**Relevant Functions:**
+- **Register**: 
+    - Method: POST
+    - URL: `/Account/Register`
+    - Body: `{ "username": "string", "password": "string", "email": "string" }`
+    - **Description**: Registers a new user account with the provided username, password, and email.
+
+- **Login**: 
+    - Method: POST
+    - URL: `/Account/Login`
+    - Body: `{ "username": "string", "password": "string" }`
+    - **Description**: Authenticates the user with the provided username and password, creating a session for the user.
+
+- **Logout**: 
+    - Method: POST
+    - URL: `/Account/LogOff`
+    - **Description**: Logs the user out of the application, ending their session.
+
+- **ForgotPassword**:
+    - Method: POST
+    - URL: `/Account/ForgotPassword`
+    - Body: `{ "email": "string" }`
+    - **Description**: Initiates the password recovery process by sending a password reset email to the provided email address.
+
+- **ResetPassword**:
+    - Method: POST
+    - URL: `/Account/ResetPassword`
+    - Body: `{ "Email": "string", "Password": "string", "ConfirmPassword": "string", "Code": "string" }`
+    - **Description**: Resets the user's password using the provided email, new password, confirmation password, and reset code.
+
+- **SendCode**:
+    - Method: POST
+    - URL: `/Account/SendCode`
+    - Body: `{ "Provider": "string", "ReturnUrl": "string", "RememberMe": true }`
+    - **Description**: Sends a verification code for two-factor authentication or other security checks.
+
+### Store Account Management (Manage Controller)
+This controller will handle matters related to store accounts, such as payment methods, initiating a transactio via the banking web API, and management of orders and shopping carts.
+
+**Relevant Functions:**
+- **CreateStoreAccount:**
+    - Method: POST
+    - URL: /Manage/CreateStoreAccount
+    - Body: `{ "accountTypeInput": "AccountType", "accountAliasInput": "string" }`
+    - **Description**: Creates a new store account with the specified type and alias. The account is initialized and stored in the database.
+
+- **SetAccountAlias:**
+    - Method: POST
+    - URL: /Manage/SetAccountAlias
+    - Body: `{ "ChangeAliasInput": "string" }`
+    - **Description**: Updates the alias for an existing store account. Ensures that the new alias is unique and valid.
+
+- **AddPaymentMethod:**
+    - Method: POST
+    - URL: /Manage/AddPaymentMethod
+    - Body: `{ "cardNumber": "string", "keyPIN": "string" }`
+    - **Description**: Adds a new payment method by encrypting and storing the provided card number and PIN.
+
+- **RemovePaymentMethod:**
+    - Method: POST
+    - URL: /Manage/RemovePaymentMethod
+    - Body: `{ "paymentMethodID": "int" }`
+    - **Description**: Removes a payment method identified by the given ID from the user's account.
+
+- **CreateOrder:**
+    - Method: POST
+    - URL: /Manage/CreateOrder
+    - Body: `{ "ShippingAddress": "string", "SelectedPaymentMethodID": "int", "ShoppingCartItems": [{ "ProductID": "int", "Quantity": "int" }] }`
+    - **Description**: Creates a new order using the specified shipping address, selected payment method, and items in the shopping cart.
+
+- **RefundOrder:**
+    - Method: POST
+    - URL: /Manage/RefundOrder
+    - Body: `{ "orderID": "int" }`
+    - **Description**: Processes a refund for the specified order ID. Updates the order status and account balances accordingly.
+
+- **EnableTwoFactorAuthentication:**
+    - Method: POST
+    - URL: /Manage/EnableTwoFactorAuthentication
+    - **Description**: Enables two-factor authentication for the user’s account, enhancing security.
+
+- **DisableTwoFactorAuthentication:**
+    - Method: POST
+    - URL: /Manage/DisableTwoFactorAuthentication
+    - **Description**: Disables two-factor authentication for the user’s account.
+
+- **ChangeEmail:**
+    - Method: POST
+    - URL: /Manage/ChangeEmail
+    - Body: `{ "OldEmail": "string", "NewEmail": "string" }`
+    - **Description**: Changes the email address associated with the user’s account to the new provided email.
+
+- **ChangeUsername:**
+    - Method: POST
+    - URL: /Manage/ChangeUsername
+    - Body: `{ "OldUsername": "string", "NewUsername": "string" }`
+    - **Description**: Updates the username for the user’s account, ensuring the new username is unique.
+
+- **ChangePassword:**
+    - Method: POST
+    - URL: /Manage/ChangePassword
+    - Body: `{ "OldPassword": "string", "NewPassword": "string" }`
+    - **Description**: Changes the user’s password from the old password to the new password provided.
+
+### Product and Store Displays (Home Controller)
+The home controller will allow the user to query for specific subsets of data when needed. The products will display according to the sort and search criteria. A store account is required before the user may use the checkout and shopping cart system.
