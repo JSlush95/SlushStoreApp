@@ -86,7 +86,7 @@ In the .NET Framework application, you can configure environment variables to ma
 
 1. Clone the repository (you can check out to this branch if you want afterwards):
     ```
-    git clone https://github.com/JSlush95/StorefrontApp.git
+    git clone https://github.com/JSlush95/SlushStoreApp.git
     cd StorefrontApp
     ```
 
