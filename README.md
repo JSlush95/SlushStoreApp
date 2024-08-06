@@ -80,8 +80,8 @@ In .NET Core, you can configure the connection to a LocalDB SQL Server using a l
 
 2. **Verify the DbContext Content:**
 
-    In your `Startup.cs` or `Program.cs` file, verify that the DbContext references the connection string from `appsettings.json`:
-    Example for ``Startup.cs`` (older versions):
+    In your `Startup.cs` or `Program.cs` file, verify that the DbContext references the connection string from `appsettings.json`.<br>
+    Default example for ``Startup.cs`` (older versions):
     ```
     public void ConfigureServices(IServiceCollection services)
     {
@@ -91,8 +91,7 @@ In .NET Core, you can configure the connection to a LocalDB SQL Server using a l
         // Other service configurations...
     }
     ```
-    <br>
-    This program's `Program.cs` connection string structure:
+    This program's `Program.cs` file:
     ```
     // Dynamically choose the provider for multiple providers and their migrations for EF Core
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
