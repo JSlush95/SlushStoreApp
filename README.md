@@ -133,7 +133,7 @@ In .NET Core, you can configure the connection to a LocalDB SQL Server using a l
 
 1. Clone the repository:
     ```
-    git clone https://github.com/JSlush95/StorefrontApp.git
+    git clone https://github.com/JSlush95/SlushStoreApp.git
     cd StorefrontAppCore
     ```
 
