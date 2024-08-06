@@ -46,6 +46,17 @@ For this implementation, I chose a PostgresQL hosted database solution. Here’s
 
     The `Program.cs` is also used to bind these and use these environmental variables. Such as a POCO class binding for the AppSettings area.
 
+    Example of how I generated a cryptographic pair of private and public keys:
+    ```
+    RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
+    
+    // RSA keys in XML format
+    string publicPrivateKeyXML = rsa.ToXmlString(true);
+    string publicOnlyKeyXML = rsa.ToXmlString(false);
+    
+    // Export to file, etc
+    ```
+
 2. **Verify the DbContext Content:**
 
     In your `Program.cs` file, verify that the ``DbContext`` references the connection string and provider from the environmental variables, the variable references the environmental variable by default:
