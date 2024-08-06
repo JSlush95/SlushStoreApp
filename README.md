@@ -81,7 +81,7 @@ In .NET Core, you can configure the connection to a LocalDB SQL Server using a l
 2. **Verify the DbContext Content:**
 
     In your `Startup.cs` or `Program.cs` file, verify that the DbContext references the connection string from `appsettings.json`:
-
+    Example for ``Startup.cs`` (older versions):
     ```
     public void ConfigureServices(IServiceCollection services)
     {
@@ -91,8 +91,27 @@ In .NET Core, you can configure the connection to a LocalDB SQL Server using a l
         // Other service configurations...
     }
     ```
+    This program's `Program.cs` connection string structure:
+    ```
+    // Dynamically choose the provider for multiple providers and their migrations for EF Core
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    {
+        switch (provider)
+        {
+            case "SqlServer":
+                options.UseSqlServer(connectionString);
+                break;
+            case "Postgresql":
+                options.UseNpgsql(supabaseConnectionString);
+                break;
+            default:
+                throw new InvalidOperationException($"Unsupported provider: {provider}");
+        }
+    });
+    ```
+   
     In Visual Studio, you can create an SQL server manually in the SQL Server Object Explorer, then you may use that database name instead.
-3. **Apply Migrations:**
+4. **Apply Migrations:**
 
     After configuring the connection string, apply the migrations to set up the database schema using either the .NET CLI or Package Manager Console:
 
