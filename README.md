@@ -41,7 +41,7 @@ Slush Store is an .NET Framework 4.8 version MVC application that simulates an o
 #### Environment Variables
 
 In the .NET Framework application, you can configure environment variables to manage sensitive settings such as email accounts, SMTP hosts, and public keys. The `EnvironmentVariables.cs` class in the `Utilities` folder provides access to these environment variables. Here’s an example of how to use it:
-- My program will use these references for their respective functionalities of emailing and encrypting.
+1. My program will use these references for their respective functionalities of emailing and encrypting.
     ```
     public static class EnvironmentVariables
     {
@@ -51,8 +51,8 @@ In the .NET Framework application, you can configure environment variables to ma
         public static string PublicKey => Environment.GetEnvironmentVariable("PublicKey", EnvironmentVariableTarget.Machine);
     }
     ```
-Note: ``ApplicationDBContext`` will contain the connection string reference:
-- In Visual Studio, you can create an SQL server manually in the SQL Server Object Explorer, then you may use that database name instead.
+2. ``ApplicationDBContext`` will contain the connection string reference:
+    - Note: In Visual Studio, you can create an SQL server manually in the SQL Server Object Explorer, then you may use that database name instead.
     ```
     public ApplicationDbContext()
                 : base("DefaultConnection")
@@ -60,7 +60,7 @@ Note: ``ApplicationDBContext`` will contain the connection string reference:
             }
     ```
 
-Example of how I generated a cryptographic pair of private and public keys:
+    - Example of how I generated a cryptographic pair of private and public keys:
     ```
         RSACryptoServiceProvider rsa = new RSACryptoServiceProvider(2048);
         
@@ -71,7 +71,7 @@ Example of how I generated a cryptographic pair of private and public keys:
         // Export to file, etc
     ```
    
-4. **Apply Migrations:**
+2. **Apply Migrations:**
 
     After configuring the connection string, apply the migrations to set up the database schema using either the .NET CLI or Package Manager Console:
 
