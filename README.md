@@ -83,9 +83,9 @@ For this implementation, I chose a PostgresQL hosted database solution. Here’s
 
 ### Installation
 
-1. Clone the repository:
+1. Clone the repository (you can check out to this branch if you want afterwards):
     ```
-    git clone https://github.com/JSlush95/StorefrontApp.git
+    git clone https://github.com/JSlush95/SlushStoreApp.git
     cd StorefrontAppCore
     ```
 
