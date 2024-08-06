@@ -91,6 +91,7 @@ In .NET Core, you can configure the connection to a LocalDB SQL Server using a l
         // Other service configurations...
     }
     ```
+    <br>
     This program's `Program.cs` connection string structure:
     ```
     // Dynamically choose the provider for multiple providers and their migrations for EF Core
