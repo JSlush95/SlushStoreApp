@@ -42,13 +42,13 @@ For this implementation, I chose a PostgresQL hosted database solution. Here’s
     - `APPSETTINGS_MAILACCOUNT`: The email sender address.
     - `APPSETTINGS_MAILPASSWORD`: The email password.
     - `APPSETTINGS_SMTPHOST`: The SMTP server address.
-    - `APPSETTINGS_PRIVATEKEY`: The private key for encrypting data sent to the Bank API.
+    - `APPSETTINGS_PUBLICKEY`: The public key for encrypting data sent to the Bank API.
 
     The `Program.cs` is also used to bind these and use these environmental variables. Such as a POCO class binding for the AppSettings area.
 
 2. **Verify the DbContext Content:**
 
-    In your `Program.cs` file, verify that the DbContext references the connection string and provider from the environmental variables, the variable references the environmental variable by default:
+    In your `Program.cs` file, verify that the ``DbContext`` references the connection string and provider from the environmental variables, the variable references the environmental variable by default:
 
     ```builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));```
     
