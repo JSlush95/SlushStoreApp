@@ -38,7 +38,6 @@ For this implementation, I chose a PostgresQL hosted database solution. Here’s
 
 1. The ``Program.cs`` file handles the configuration and initialization of services. It reads environment variables for sensitive settings such as database connection strings and file paths. Ensure that the following environment variables are set:
     - `CUSTOMCONNSTR_DBConnection`: The base connection string for the PostgreSQL database.
-    - `ROOT_CERTIFICATE_PATH`: The relative path to the root certificate used for SSL.
     - `APPSETTINGS_MAILACCOUNT`: The email sender address.
     - `APPSETTINGS_MAILPASSWORD`: The email password.
     - `APPSETTINGS_SMTPHOST`: The SMTP server address.
