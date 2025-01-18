@@ -23,15 +23,7 @@ builder.Services.Configure<AppSettings>(options =>
     options.PublicKey = Environment.GetEnvironmentVariable("PublicKey");
 });
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString, npgsqlOptions =>
-    {
-        npgsqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 2,
-            maxRetryDelay: TimeSpan.FromSeconds(10),
-            errorCodesToAdd: null
-        );
-    }));
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
