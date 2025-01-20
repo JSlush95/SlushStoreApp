@@ -98,8 +98,9 @@
             <div class="custom-list-group">
                 <strong>Alias Note</strong>
                 <ul>
-                    <li>An account alias is used to connect to the companion <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> website. 
-                        It must match your <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> account alias.</li>
+                    <li>
+                        An account alias is used to connect to the companion <a id="specialRef" href="https://slushbanking.fly.dev/ ">SlushBanking</a> website.
+                        It must match your <a id="specialRef" href="https://slushbanking.fly.dev/ ">SlushBanking</a> account alias.</li>
                     <li><strong>Aliases are alphanumeric characters only.</strong></li>
                 </ul>
             </div>
@@ -182,7 +183,7 @@
         else
         {
             <div class="alert alert-primary" role="alert">
-                Could not find any payment methods. Please use ones only from the companion banking website: <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a>. <strong>This requires a store account.</strong>
+                Could not find any payment methods. Please use ones only from the companion banking website: <a id="specialRef" href="https://slushbanking.fly.dev/ ">SlushBanking</a>. <strong>This requires a store account.</strong>
             </div>
             <br />
         }
@@ -191,7 +192,7 @@
             <div class="custom-list-group">
                 <strong>Payment Method Note:</strong>
                 <ul>
-                    <li>The Key ID is a 5-digit non-negative, non-decimal number issued from the companion <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> website. No other issued cards will work.</li>
+                    <li>The Key ID is a 5-digit non-negative, non-decimal number issued from the companion <a id="specialRef" href="https://slushbanking.fly.dev/ ">SlushBanking</a> website. No other issued cards will work.</li>
                 </ul>
             </div>
             using (Html.BeginForm("AddPaymentMethod", "Manage", FormMethod.Post, new { role = "form" }))
@@ -327,8 +328,10 @@
             <strong>Store Account Not Created</strong>
             <ul>
                 <li>A store account is needed to interact with the store system.</li>
-                <li>An account alias is required to connect to the companion website: <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a>.
-                    It must match your <a id="specialRef" href="https://slushbanking20240729194751.azurewebsites.net/ ">SlushBanking</a> account's alias.</li>
+                <li>
+                    An account alias is required to connect to the companion website: <a id="specialRef" href="https://slushbanking.fly.dev/ ">SlushBanking</a>.
+                    It must match your <a id="specialRef" href="https://slushbanking.fly.dev/ ">SlushBanking</a> account's alias.
+                </li>
                 <li>An account alias cannot already be in use, make it strong. <strong>Alphanumeric characters only.</strong></li>
             </ul>
             <br />
