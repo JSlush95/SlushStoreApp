@@ -1,4 +1,4 @@
-# Slush Store (Development Server Branch)
+# Slush Store (Live Server)
 
 Slush Store is an ASP.NET 8 (Core) MVC application that simulates an online storefront, featuring user account management, shopping cart functionality, order processing, and a secure integration with an external banking web API [companion application](https://github.com/JSlush95/BankingApp). This interaction is for payment and refund transactions. This application leverages ASP.NET Identity for user authentication and authorization, and Entity Framework Core for data access.
 
